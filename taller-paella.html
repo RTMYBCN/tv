@@ -527,7 +527,7 @@ body {
 
   <!-- Bottom info bar -->
   <div id="bottom-bar">
-    <div id="step-num">PASO 0 / 18</div>
+    <div id="step-num">PASO 0 / 19</div>
     <div id="next-info"></div>
   </div>
 
@@ -582,9 +582,10 @@ const STEP_IMG = {
   13: "cuchara",
   14: "pescado",
   15: "gamba",
-  16: "paella_top",
-  17: "paella_lado",
-  18: "paella_top",
+  16: "limon",
+  17: "paella_top",
+  18: "paella_lado",
+  19: "paella_top",
 };
 
 
@@ -696,22 +697,28 @@ const STEPS = [
     n:15, dur:60,
     t:{ es:'AGREGAR LOS LANGOSTINOS', en:'ADD THE PRAWNS',              fr:'AJOUTER LES CREVETTES',       zh:'放入大虾',       de:'GARNELEN HINZUFÜGEN'       },
     s:{ es:'DECORAR LA PAELLA',       en:'GARNISH THE PAELLA',          fr:'DÉCORER LA PAELLA',           zh:'装饰米饭',       de:'PAELLA GARNIEREN'          },
-    nx:{ es:'DEJAR COCER EL ARROZ',   en:'LET THE RICE COOK',           fr:'LAISSER CUIRE LE RIZ',        zh:'让米饭继续煮',   de:'REIS KOCHEN LASSEN'        }, nxd:3
+    nx:{ es:'AGREGAR INFUSIÓN DE AZAFRÁN', en:'ADD SAFFRON INFUSION',      fr:"AJOUTER L'INFUSION DE SAFRAN", zh:'加入藏红花浸液', de:'SAFRANAUFGUSS HINZUFÜGEN'  }, nxd:0.5
   },
   {
-    n:16, dur:180,
+    n:16, dur:30,
+    t:{ es:'AGREGAR INFUSIÓN DE AZAFRÁN', en:'ADD SAFFRON INFUSION',       fr:"AJOUTER L'INFUSION DE SAFRAN", zh:'加入藏红花浸液', de:'SAFRANAUFGUSS HINZUFÜGEN'  },
+    s:{ es:'VERTER SOBRE EL ARROZ',        en:'POUR OVER THE RICE',         fr:'VERSER SUR LE RIZ',            zh:'倒在米饭上',     de:'ÜBER DEN REIS GIEßEN'      },
+    nx:{ es:'DEJAR COCER EL ARROZ',        en:'LET THE RICE COOK',          fr:'LAISSER CUIRE LE RIZ',         zh:'让米饭继续煮',   de:'REIS KOCHEN LASSEN'        }, nxd:3
+  },
+  {
+    n:17, dur:180,
     t:{ es:'DEJAR COCER EL ARROZ',    en:'LET THE RICE COOK',           fr:'LAISSER CUIRE LE RIZ',        zh:'让米饭继续煮',   de:'REIS KOCHEN LASSEN'        },
     s:{ es:'CONTINUAR GIRANDO LA PAELLA', en:'CONTINUE ROTATING THE PAELLA PAN', fr:'CONTINUER À FAIRE TOURNER LA POÊLE', zh:'继续旋转锅', de:'PFANNE WEITERHIN DREHEN' },
     nx:{ es:'APAGAR EL FUEGO',        en:'TURN OFF THE HEAT',           fr:'ÉTEINDRE LE FEU',             zh:'关火',           de:'FEUER AUSSCHALTEN'         }, nxd:1
   },
   {
-    n:17, dur:60,
+    n:18, dur:60,
     t:{ es:'APAGAR EL FUEGO',         en:'TURN OFF THE HEAT',           fr:'ÉTEINDRE LE FEU',             zh:'关火',           de:'FEUER AUSSCHALTEN'         },
     s:{ es:'',                         en:'',                            fr:'',                            zh:'',               de:''                          },
     nx:{ es:'REPOSAR LA PAELLA',      en:'LET THE PAELLA REST',         fr:'LAISSER REPOSER LA PAELLA',   zh:'让饭静置',       de:'PAELLA RUHEN LASSEN'       }, nxd:2
   },
   {
-    n:18, dur:120,
+    n:19, dur:120,
     t:{ es:'DEJAR REPOSAR EL ARROZ',  en:'LET THE RICE REST',           fr:'LAISSER REPOSER LE RIZ',      zh:'让米饭静置',     de:'REIS RUHEN LASSEN'         },
     s:{ es:'',                         en:'',                            fr:'',                            zh:'',               de:''                          },
     nx: null, nxd:0
@@ -799,7 +806,7 @@ function loadStep(idx, animate) {
 
   // Step counter
   const sl = LBL.step[lang1];
-  document.getElementById('step-num').textContent = `${sl} ${st.n} / 18`;
+  document.getElementById('step-num').textContent = `${sl} ${st.n} / 19`;
 
   // Next step
   if (st.nx) {
