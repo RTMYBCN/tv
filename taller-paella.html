@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>RTMY — Taller de Paella</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: #0D0D0D;
+  font-family: 'Barlow Condensed', 'Arial Narrow', 'Noto Sans SC', Arial, sans-serif;
+  color: white;
+  user-select: none;
+  cursor: default;
+}
+
+/* ══════════════════════════════════════════════
+   LANGUAGE SELECTOR
+══════════════════════════════════════════════ */
+#lang-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  background: #0D0D0D;
+}
+
+.ls-logo {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 12px;
+  color: #C0272D;
+  text-transform: uppercase;
+}
+
+.ls-title {
+  font-size: 68px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-align: center;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.ls-hint {
+  font-size: 30px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 400;
+  letter-spacing: 3px;
+}
+
+.lang-grid {
+  display: flex;
+  gap: 20px;
+}
+
+.lang-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 38px;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  cursor: pointer;
+  color: white;
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.lang-btn:hover {
+  background: rgba(192,39,45,0.2);
+  border-color: rgba(192,39,45,0.5);
+}
+
+.lang-btn.selected {
+  background: rgba(192,39,45,0.55);
+  border-color: #C0272D;
+  box-shadow: 0 0 36px rgba(192,39,45,0.4);
+}
+
+.lang-btn.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 22px;
+  color: white;
+}
+
+.lang-btn { position: relative; }
+
+.lang-flag { font-size: 52px; line-height: 1; }
+
+#start-btn {
+  padding: 22px 90px;
+  font-family: inherit;
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  background: #C0272D;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+#start-btn.ready {
+  opacity: 1;
+  pointer-events: all;
+  box-shadow: 0 6px 50px rgba(192,39,45,0.5);
+  animation: pulse-btn 2s ease-in-out infinite;
+}
+
+#start-btn.ready:hover {
+  background: #D93030;
+  transform: scale(1.03);
+  animation: none;
+}
+
+@keyframes pulse-btn {
+  0%, 100% { box-shadow: 0 6px 50px rgba(192,39,45,0.4); }
+  50% { box-shadow: 0 6px 70px rgba(192,39,45,0.7); }
+}
+
+/* ══════════════════════════════════════════════
+   MAIN SCREEN
+══════════════════════════════════════════════ */
+#main-screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  background: #0D0D0D;
+}
+
+/* ── Logo bar ── */
+#logo-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 64px;
+  border-bottom: 1px solid rgba(192,39,45,0.25);
+  background: rgba(0,0,0,0.35);
+  z-index: 10;
+}
+
+#logo-txt {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 9px;
+  color: #C0272D;
+  text-transform: uppercase;
+}
+
+#total-counter {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.45);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ── Text area ── */
+#text-area {
+  position: absolute;
+  top: 76px;
+  left: 0; right: 0;
+  height: 490px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 100px;
+  gap: 0;
+  overflow: hidden;
+}
+
+.block-lang {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.main-title {
+  font-size: 112px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #C0272D;
+  text-transform: uppercase;
+  line-height: 1;
+  text-align: center;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.step-sub {
+  font-size: 50px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.80);
+  text-transform: uppercase;
+  line-height: 1.2;
+  text-align: center;
+  min-height: 62px;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.lang-divider {
+  width: 560px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(192,39,45,0.7), transparent);
+  margin: 20px 0;
+  flex-shrink: 0;
+}
+
+/* ── Timer ── */
+#timer-block {
+  position: absolute;
+  left: 0; right: 0;
+  top: 566px;
+  height: 316px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#timer-display {
+  font-size: 230px;
+  font-weight: 900;
+  letter-spacing: -6px;
+  color: white;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  transition: color 0.4s;
+}
+
+#timer-display.urgent {
+  color: #C0272D;
+  animation: blink-urgent 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes blink-urgent {
+  from { opacity: 1; }
+  to   { opacity: 0.45; }
+}
+
+/* ── Bottom bar ── */
+#bottom-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 118px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 64px;
+  background: rgba(0,0,0,0.4);
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+#step-num {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+}
+
+#next-info {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.4);
+  text-align: right;
+  max-width: 980px;
+  text-transform: uppercase;
+}
+
+/* ── Pause overlay ── */
+#pause-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 30px;
+  z-index: 50;
+  cursor: pointer;
+}
+
+#pause-text {
+  font-size: 130px;
+  font-weight: 900;
+  letter-spacing: 14px;
+  color: white;
+  text-transform: uppercase;
+}
+
+#pause-sub {
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: 5px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+}
+
+/* ── Controls hint ── */
+#ctrl-hint {
+  position: absolute;
+  bottom: 126px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.14);
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Step transition animation ── */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(35px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideOutUp {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-35px); }
+}
+
+.text-enter { animation: slideInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.text-enter-delay { animation: slideInUp 0.55s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.text-enter-delay2 { animation: slideInUp 0.55s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.text-enter-delay3 { animation: slideInUp 0.55s 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ── Flash on step change ── */
+@keyframes flash-red {
+  0%   { background: rgba(192,39,45,0.22); }
+  100% { background: #0D0D0D; }
+}
+
+.flash { animation: flash-red 0.45s ease forwards; }
+
+/* ══════════════════════════════════════════════
+   FINISH SCREEN
+══════════════════════════════════════════════ */
+#finish-screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 36px;
+  background: #0D0D0D;
+}
+
+.fin-top {
+  font-size: 150px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: #C0272D;
+  text-transform: uppercase;
+  text-align: center;
+  animation: slideInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fin-sub {
+  font-size: 60px;
+  font-weight: 600;
+  letter-spacing: 6px;
+  color: rgba(255,255,255,0.8);
+  text-transform: uppercase;
+  text-align: center;
+  animation: slideInUp 0.7s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fin-logo {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 10px;
+  color: rgba(192,39,45,0.5);
+  text-transform: uppercase;
+  margin-top: 20px;
+  animation: slideInUp 0.7s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#restart-btn {
+  margin-top: 30px;
+  padding: 20px 64px;
+  font-family: inherit;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  background: rgba(192,39,45,0.7);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.2s;
+  animation: slideInUp 0.7s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+#restart-btn:hover { background: #C0272D; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════ -->
+<!-- LANGUAGE SELECTOR                       -->
+<!-- ════════════════════════════════════════ -->
+<div id="lang-screen">
+  <div class="ls-logo">🍚 Rice to Meet You</div>
+  <div class="ls-title">
+    Selecciona tus idiomas<br>
+    Select your languages
+  </div>
+  <div class="ls-hint">Elige 2 · Choose 2</div>
+
+  <div class="lang-grid">
+    <button class="lang-btn" data-lang="es">
+      <span class="lang-flag">🇪🇸</span>
+      <span>ESPAÑOL</span>
+    </button>
+    <button class="lang-btn" data-lang="en">
+      <span class="lang-flag">🇬🇧</span>
+      <span>ENGLISH</span>
+    </button>
+    <button class="lang-btn" data-lang="fr">
+      <span class="lang-flag">🇫🇷</span>
+      <span>FRANÇAIS</span>
+    </button>
+    <button class="lang-btn" data-lang="zh">
+      <span class="lang-flag">🇨🇳</span>
+      <span>中文</span>
+    </button>
+    <button class="lang-btn" data-lang="de">
+      <span class="lang-flag">🇩🇪</span>
+      <span>DEUTSCH</span>
+    </button>
+  </div>
+
+  <button id="start-btn" onclick="startPresentation()">▶ EMPEZAR · START</button>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- MAIN SCREEN                             -->
+<!-- ════════════════════════════════════════ -->
+<div id="main-screen">
+
+  <!-- Top logo bar -->
+  <div id="logo-bar">
+    <div id="logo-txt">Rice to Meet You</div>
+    <div id="total-counter">⏱ --:--</div>
+  </div>
+
+  <!-- Bilingual text area -->
+  <div id="text-area">
+    <div class="block-lang">
+      <div id="title1" class="main-title"></div>
+      <div id="sub1"   class="step-sub"></div>
+    </div>
+    <div class="lang-divider"></div>
+    <div class="block-lang">
+      <div id="title2" class="main-title"></div>
+      <div id="sub2"   class="step-sub"></div>
+    </div>
+  </div>
+
+  <!-- Step countdown timer -->
+  <div id="timer-block">
+    <div id="timer-display">00:00</div>
+  </div>
+
+  <!-- Controls hint -->
+  <div id="ctrl-hint">ESPACIO: pausar · ← →: navegar</div>
+
+  <!-- Bottom info bar -->
+  <div id="bottom-bar">
+    <div id="step-num">PASO 0 / 18</div>
+    <div id="next-info"></div>
+  </div>
+
+  <!-- Pause overlay -->
+  <div id="pause-overlay" onclick="togglePause()">
+    <div id="pause-text">⏸ PAUSA</div>
+    <div id="pause-sub">Pulsa ESPACIO o haz clic para continuar</div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- FINISH SCREEN                           -->
+<!-- ════════════════════════════════════════ -->
+<div id="finish-screen">
+  <div id="fin-title" class="fin-top"></div>
+  <div id="fin-sub"   class="fin-sub"></div>
+  <div class="fin-logo">Rice to Meet You · Barcelona</div>
+  <button id="restart-btn" onclick="resetToStart()">↩ VOLVER AL INICIO</button>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   RECIPE DATA  (19 steps: 0 → 18)
+════════════════════════════════════════════════ */
+const STEPS = [
+  {
+    n:0,  dur:60,
+    t:{ es:'VAMOS A COMENZAR',       en:"LET'S BEGIN",                fr:'COMMENÇONS',                  zh:'开始吧',         de:"LOS GEHT'S"                },
+    s:{ es:'TODO PREPARADO',          en:'EVERYTHING IS READY',         fr:'TOUT EST PRÊT',               zh:'准备就绪',       de:'ALLES BEREIT'              },
+    nx:{ es:'CALENTAR LA PAELLA',     en:'HEAT THE PAN',                fr:'CHAUFFER LA POÊLE',           zh:'预热锅',         de:'PFANNE ERHITZEN'           }, nxd:1
+  },
+  {
+    n:1,  dur:60,
+    t:{ es:'CALENTAR LA PAELLA',      en:'HEAT THE PAN',                fr:'CHAUFFER LA POÊLE',           zh:'预热锅',         de:'PFANNE ERHITZEN'           },
+    s:{ es:'FUEGO SIMPLE — NIVEL 2',  en:'SINGLE BURNER — LEVEL 2',     fr:'BRÛLEUR SIMPLE — NIVEAU 2',   zh:'单炉 — 2级',     de:'EINZELBRENNER — STUFE 2'   },
+    nx:{ es:'CALENTAR EL ACEITE',     en:'HEAT THE OIL',                fr:"CHAUFFER L'HUILE",            zh:'加热油',         de:'ÖL ERHITZEN'               }, nxd:1
+  },
+  {
+    n:2,  dur:60,
+    t:{ es:'CALENTAR EL ACEITE',      en:'HEAT THE OIL',                fr:"CHAUFFER L'HUILE",            zh:'加热油',         de:'ÖL ERHITZEN'               },
+    s:{ es:'RESERVAR LA MITAD PARA DESPUÉS', en:'RESERVE HALF FOR LATER', fr:'RÉSERVER LA MOITIÉ POUR PLUS TARD', zh:'留出一半待用', de:'HÄLFTE FÜR SPÄTER AUFBEWAHREN' },
+    nx:{ es:'DORAR EL AJO',           en:'BROWN THE GARLIC',            fr:"DORER L'AIL",                 zh:'炒蒜',           de:'KNOBLAUCH ANBRATEN'        }, nxd:1
+  },
+  {
+    n:3,  dur:60,
+    t:{ es:'DORAR EL AJO',            en:'BROWN THE GARLIC',            fr:"DORER L'AIL",                 zh:'炒香大蒜',       de:'KNOBLAUCH ANBRATEN'        },
+    s:{ es:'MOVERLO POR LA PAELLA PARA DAR SABOR', en:'MOVE IT AROUND THE PAN TO RELEASE ITS FLAVOR', fr:'LE DÉPLACER DANS LA POÊLE POUR LIBÉRER LES ARÔMES', zh:'在锅中翻炒释放香味', de:'IN DER PFANNE BEWEGEN FÜR AROMA' },
+    nx:{ es:'MARCAR LANGOSTINOS',     en:'SEAR THE PRAWNS',             fr:'SAISIR LES CREVETTES',        zh:'煎虾',           de:'GARNELEN ANBRATEN'         }, nxd:2
+  },
+  {
+    n:4,  dur:120,
+    t:{ es:'MARCAR LOS LANGOSTINOS',  en:'SEAR THE PRAWNS',             fr:'SAISIR LES CREVETTES',        zh:'煎大虾',         de:'GARNELEN ANBRATEN'         },
+    s:{ es:'UN MINUTO POR CADA LADO', en:'ONE MINUTE ON EACH SIDE',     fr:'UNE MINUTE DE CHAQUE CÔTÉ',   zh:'每面煎一分钟',   de:'EINE MINUTE PRO SEITE'     },
+    nx:{ es:'EXTRAER EL CORAL',       en:'EXTRACT THE CORAL',           fr:'EXTRAIRE LE CORAIL',          zh:'取出虾膏',       de:'KORALLE ENTNEHMEN'         }, nxd:1
+  },
+  {
+    n:5,  dur:60,
+    t:{ es:'EXTRAER EL CORAL DE LAS CABEZAS', en:'EXTRACT THE CORAL FROM THE HEADS', fr:'EXTRAIRE LE CORAIL DES TÊTES', zh:'从虾头取出虾膏', de:'KORALLE AUS DEN KÖPFEN NEHMEN' },
+    s:{ es:'LUEGO RETIRAR LANGOSTINOS DE LA PAELLA', en:'THEN REMOVE THE PRAWNS FROM THE PAN', fr:'PUIS RETIRER LES CREVETTES DE LA POÊLE', zh:'然后将虾从锅中取出', de:'DANN GARNELEN AUS DER PFANNE NEHMEN' },
+    nx:{ es:'SALTEAR CALAMARES',      en:'SAUTÉ THE SQUIDS',            fr:'SAUTER LES CALMARS',          zh:'炒鱿鱼',         de:'TINTENFISCH ANBRATEN'      }, nxd:1
+  },
+  {
+    n:6,  dur:60,
+    t:{ es:'SALTEAR LOS CALAMARES',   en:'SAUTÉ THE SQUIDS',            fr:'FAIRE SAUTER LES CALMARS',    zh:'炒鱿鱼',         de:'TINTENFISCH ANBRATEN'      },
+    s:{ es:'AGREGAR EL RESTO DEL ACEITE', en:'ADD THE REMAINING OIL',   fr:"AJOUTER LE RESTE D'HUILE",    zh:'加入剩余的油',   de:'RESTLICHES ÖL HINZUFÜGEN'  },
+    nx:{ es:'SALTEAR PIMIENTOS',      en:'SAUTÉ THE PEPPERS',           fr:'SAUTER LES POIVRONS',         zh:'炒甜椒',         de:'PAPRIKA ANBRATEN'          }, nxd:3.5
+  },
+  {
+    n:7,  dur:210,
+    t:{ es:'SALTEAR LOS PIMIENTOS',   en:'SAUTÉ THE PEPPERS',           fr:'FAIRE SAUTER LES POIVRONS',   zh:'炒甜椒',         de:'PAPRIKA ANBRATEN'          },
+    s:{ es:'AL TERMINAR, APARTARLOS', en:'ONCE DONE, SET THEM ASIDE',   fr:'UNE FOIS CUITS, LES METTRE DE CÔTÉ', zh:'完成后，拨到一边', de:'WENN FERTIG, BEISEITE STELLEN' },
+    nx:{ es:'DORAR LA CEBOLLA',       en:'BROWN THE ONION',             fr:"DORER L'OIGNON",              zh:'炒洋葱',         de:'ZWIEBELN ANBRATEN'         }, nxd:4
+  },
+  {
+    n:8,  dur:240,
+    t:{ es:'DORAR LA CEBOLLA',        en:'BROWN THE ONION',             fr:"DORER L'OIGNON",              zh:'炒洋葱至金黄',   de:'ZWIEBELN ANBRATEN'         },
+    s:{ es:'REMOVIENDO LENTAMENTE',   en:'STIRRING SLOWLY',             fr:'EN REMUANT LENTEMENT',        zh:'缓慢翻炒',       de:'LANGSAM RÜHREN'            },
+    nx:{ es:'MEZCLAR TODO',           en:'MIX EVERYTHING',              fr:'TOUT MÉLANGER',               zh:'混合所有食材',   de:'ALLES MISCHEN'             }, nxd:3
+  },
+  {
+    n:9,  dur:180,
+    t:{ es:'MEZCLAR TODOS LOS INGREDIENTES', en:'MIX ALL THE INGREDIENTS', fr:'MÉLANGER TOUS LES INGRÉDIENTS', zh:'混合所有食材', de:'ALLE ZUTATEN MISCHEN'   },
+    s:{ es:'REMOVIENDO LENTAMENTE',   en:'STIRRING SLOWLY',             fr:'EN REMUANT LENTEMENT',        zh:'缓慢搅拌',       de:'LANGSAM RÜHREN'            },
+    nx:{ es:'SUBIR EL FUEGO',         en:'INCREASE THE HEAT',           fr:'AUGMENTER LE FEU',            zh:'加大火力',       de:'FEUER ERHÖHEN'             }, nxd:1
+  },
+  {
+    n:10, dur:60,
+    t:{ es:'SUBIR EL FUEGO',          en:'INCREASE THE HEAT',           fr:'AUGMENTER LE FEU',            zh:'加大火力',       de:'FEUER ERHÖHEN'             },
+    s:{ es:'POTENCIA DOBLE — NIVEL 3', en:'DOUBLE BURNER — LEVEL 3',    fr:'DOUBLE BRÛLEUR — NIVEAU 3',   zh:'双炉 — 3级',     de:'DOPPELBRENNER — STUFE 3'   },
+    nx:{ es:'AGREGAR EL VINO',        en:'ADD THE WINE',                fr:'AJOUTER LE VIN',              zh:'加入葡萄酒',     de:'WEIN HINZUFÜGEN'           }, nxd:1
+  },
+  {
+    n:11, dur:60,
+    t:{ es:'AGREGAR EL VINO',         en:'ADD THE WINE',                fr:'AJOUTER LE VIN',              zh:'加入葡萄酒',     de:'WEIN HINZUFÜGEN'           },
+    s:{ es:'DESGLASAR TODA LA PAELLA', en:'DEGLAZE THE ENTIRE PAN',     fr:'DÉGLACER TOUTE LA POÊLE',     zh:'给整个锅脱釉',   de:'DIE GESAMTE PFANNE ABLÖSCHEN' },
+    nx:{ es:'AGREGAR SALMORRETA',     en:'ADD THE SALMORRETA',          fr:'AJOUTER LA SALMORRETA',       zh:'加入萨尔莫雷塔', de:'SALMORRETA HINZUFÜGEN'     }, nxd:3
+  },
+  {
+    n:12, dur:180,
+    t:{ es:'AGREGAR LA SALMORRETA',   en:'ADD THE SALMORRETA',          fr:'AJOUTER LA SALMORRETA',       zh:'加入萨尔莫雷塔酱', de:'SALMORRETA HINZUFÜGEN'   },
+    s:{ es:'MEZCLAR BIEN Y DEJAR QUE REDUZCA', en:'MIX WELL AND LET IT REDUCE', fr:'BIEN MÉLANGER ET LAISSER RÉDUIRE', zh:'充分混合并收汁', de:'GUT MISCHEN UND EINKOCHEN LASSEN' },
+    nx:{ es:'AGREGAR EL ARROZ',       en:'ADD THE RICE',                fr:'AJOUTER LE RIZ',              zh:'加入米饭',       de:'REIS HINZUFÜGEN'           }, nxd:1
+  },
+  {
+    n:13, dur:60,
+    t:{ es:'AGREGAR EL ARROZ',        en:'ADD THE RICE',                fr:'AJOUTER LE RIZ',              zh:'加入米饭',       de:'REIS HINZUFÜGEN'           },
+    s:{ es:'MEZCLAR TODO MUY BIEN',   en:'MIX EVERYTHING VERY WELL',    fr:'TOUT BIEN MÉLANGER',          zh:'充分混合所有食材', de:'ALLES SEHR GUT MISCHEN'  },
+    nx:{ es:'AGREGAR EL FUMET',       en:'ADD THE FISH STOCK',          fr:'AJOUTER LE FUMET',            zh:'加入鱼高汤',     de:'FISCHFOND HINZUFÜGEN'      }, nxd:10
+  },
+  {
+    n:14, dur:600,
+    t:{ es:'AGREGAR EL FUMET',        en:'ADD THE FISH STOCK',          fr:'AJOUTER LE FUMET DE POISSON', zh:'加入鱼高汤',     de:'FISCHFOND HINZUFÜGEN'      },
+    s:{ es:'REPARTIR TODOS LOS INGREDIENTES', en:'DISTRIBUTE ALL THE INGREDIENTS EVENLY', fr:'RÉPARTIR TOUS LES INGRÉDIENTS UNIFORMÉMENT', zh:'均匀分配所有食材', de:'ALLE ZUTATEN GLEICHMÄSSIG VERTEILEN' },
+    nx:{ es:'AGREGAR LOS LANGOSTINOS', en:'ADD THE PRAWNS',             fr:'AJOUTER LES CREVETTES',       zh:'放入大虾',       de:'GARNELEN HINZUFÜGEN'       }, nxd:1
+  },
+  {
+    n:15, dur:60,
+    t:{ es:'AGREGAR LOS LANGOSTINOS', en:'ADD THE PRAWNS',              fr:'AJOUTER LES CREVETTES',       zh:'放入大虾',       de:'GARNELEN HINZUFÜGEN'       },
+    s:{ es:'DECORAR LA PAELLA',       en:'GARNISH THE PAELLA',          fr:'DÉCORER LA PAELLA',           zh:'装饰米饭',       de:'PAELLA GARNIEREN'          },
+    nx:{ es:'DEJAR COCER EL ARROZ',   en:'LET THE RICE COOK',           fr:'LAISSER CUIRE LE RIZ',        zh:'让米饭继续煮',   de:'REIS KOCHEN LASSEN'        }, nxd:3
+  },
+  {
+    n:16, dur:180,
+    t:{ es:'DEJAR COCER EL ARROZ',    en:'LET THE RICE COOK',           fr:'LAISSER CUIRE LE RIZ',        zh:'让米饭继续煮',   de:'REIS KOCHEN LASSEN'        },
+    s:{ es:'CONTINUAR GIRANDO LA PAELLA', en:'CONTINUE ROTATING THE PAELLA PAN', fr:'CONTINUER À FAIRE TOURNER LA POÊLE', zh:'继续旋转锅', de:'PFANNE WEITERHIN DREHEN' },
+    nx:{ es:'APAGAR EL FUEGO',        en:'TURN OFF THE HEAT',           fr:'ÉTEINDRE LE FEU',             zh:'关火',           de:'FEUER AUSSCHALTEN'         }, nxd:1
+  },
+  {
+    n:17, dur:60,
+    t:{ es:'APAGAR EL FUEGO',         en:'TURN OFF THE HEAT',           fr:'ÉTEINDRE LE FEU',             zh:'关火',           de:'FEUER AUSSCHALTEN'         },
+    s:{ es:'',                         en:'',                            fr:'',                            zh:'',               de:''                          },
+    nx:{ es:'REPOSAR LA PAELLA',      en:'LET THE PAELLA REST',         fr:'LAISSER REPOSER LA PAELLA',   zh:'让饭静置',       de:'PAELLA RUHEN LASSEN'       }, nxd:2
+  },
+  {
+    n:18, dur:120,
+    t:{ es:'DEJAR REPOSAR EL ARROZ',  en:'LET THE RICE REST',           fr:'LAISSER REPOSER LE RIZ',      zh:'让米饭静置',     de:'REIS RUHEN LASSEN'         },
+    s:{ es:'',                         en:'',                            fr:'',                            zh:'',               de:''                          },
+    nx: null, nxd:0
+  }
+];
+
+/* Labels */
+const LBL = {
+  nextStep: { es:'SIGUIENTE PASO', en:'NEXT STEP', fr:'ÉTAPE SUIVANTE', zh:'下一步', de:'NÄCHSTER SCHRITT' },
+  step:     { es:'PASO', en:'STEP', fr:'ÉTAPE', zh:'步骤', de:'SCHRITT' },
+  total:    { es:'TOTAL', en:'TOTAL', fr:'TOTAL', zh:'总计', de:'GESAMT' },
+  pause:    { es:'⏸ PAUSA', en:'⏸ PAUSE', fr:'⏸ PAUSE', zh:'⏸ 暂停', de:'⏸ PAUSE' },
+  pauseSub: { es:'Pulsa ESPACIO o haz clic para continuar', en:'Press SPACE or click to continue', fr:'Appuie sur ESPACE ou clique pour continuer', zh:'按空格键或点击继续', de:'Leertaste drücken oder klicken zum Fortfahren' },
+  controls: { es:'ESPACIO: pausar  ·  ← →: navegar', en:'SPACE: pause  ·  ← →: navigate', fr:'ESPACE: pause  ·  ← →: naviguer', zh:'空格键：暂停  ·  ← →：导航', de:'LEERTASTE: Pause  ·  ← →: navigieren' },
+  finTitle: { es:'¡BUEN PROVECHO!', en:'ENJOY YOUR MEAL!', fr:'BON APPÉTIT !', zh:'请慢用！', de:'GUTEN APPETIT!' },
+  finSub:   { es:'HABÉIS HECHO UNA PAELLA INCREÍBLE', en:"YOU'VE MADE AN INCREDIBLE PAELLA", fr:'VOUS AVEZ PRÉPARÉ UNE PAELLA INCROYABLE', zh:'你们做了一道超棒的海鲜饭', de:'IHR HABT EINE TOLLE PAELLA GEMACHT' }
+};
+
+const TOTAL_DUR = STEPS.reduce((s, st) => s + st.dur, 0); // 2550s
+
+/* ════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════ */
+let selectedLangs = [];
+let lang1 = 'es', lang2 = 'en';
+let curStep = 0;
+let stepLeft = 0;
+let totalLeft = 0;
+let paused = false;
+let ticker = null;
+
+/* ════════════════════════════════════════════════
+   LANGUAGE SELECTOR
+════════════════════════════════════════════════ */
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const l = btn.dataset.lang;
+    if (selectedLangs.includes(l)) {
+      selectedLangs = selectedLangs.filter(x => x !== l);
+      btn.classList.remove('selected');
+    } else if (selectedLangs.length < 2) {
+      selectedLangs.push(l);
+      btn.classList.add('selected');
+    }
+    const sb = document.getElementById('start-btn');
+    if (selectedLangs.length === 2) sb.classList.add('ready');
+    else sb.classList.remove('ready');
+  });
+});
+
+function startPresentation() {
+  if (selectedLangs.length !== 2) return;
+  [lang1, lang2] = selectedLangs;
+
+  document.getElementById('lang-screen').style.display = 'none';
+  const ms = document.getElementById('main-screen');
+  ms.style.display = 'block';
+
+  document.getElementById('ctrl-hint').textContent = LBL.controls[lang1];
+
+  curStep = 0;
+  totalLeft = TOTAL_DUR;
+  loadStep(0, false);
+  startTicker();
+}
+
+/* ════════════════════════════════════════════════
+   STEP DISPLAY
+════════════════════════════════════════════════ */
+function loadStep(idx, animate) {
+  const st = STEPS[idx];
+  stepLeft = st.dur;
+
+  if (animate) {
+    ['title1','sub1','title2','sub2'].forEach(id => {
+      const el = document.getElementById(id);
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-20px)';
+    });
+    setTimeout(() => renderStepText(st), 280);
+  } else {
+    renderStepText(st);
+  }
+
+  // Step counter
+  const sl = LBL.step[lang1];
+  document.getElementById('step-num').textContent = `${sl} ${st.n} / 18`;
+
+  // Next step
+  if (st.nx) {
+    const nl  = LBL.nextStep[lang1];
+    const nxn = st.nx[lang1];
+    const dur = formatDur(st.nxd);
+    document.getElementById('next-info').textContent = `${nl}: ${nxn}  (${dur})`;
+  } else {
+    document.getElementById('next-info').innerHTML = '🎉 &nbsp;¡BUEN PROVECHO! · ENJOY!';
+  }
+
+  // Update timer display immediately
+  renderTimer();
+  renderTotal();
+}
+
+function renderStepText(st) {
+  const ids = ['title1','sub1','title2','sub2'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    el.style.transition = 'none';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(25px)';
+  });
+  document.getElementById('title1').textContent = st.t[lang1] || '';
+  document.getElementById('sub1').textContent   = st.s[lang1] || '';
+  document.getElementById('title2').textContent = st.t[lang2] || '';
+  document.getElementById('sub2').textContent   = st.s[lang2] || '';
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      ids.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.style.transition = `opacity 0.5s ${i*0.09}s ease, transform 0.5s ${i*0.09}s ease`;
+        el.style.opacity    = '1';
+        el.style.transform  = 'translateY(0)';
+      });
+    });
+  });
+}
+
+function formatDur(min) {
+  const m = Math.floor(min);
+  const s = Math.round((min - m) * 60);
+  if (s > 0) return `${m}:${String(s).padStart(2,'0')} min`;
+  return `${m} min`;
+}
+
+/* ════════════════════════════════════════════════
+   TIMERS
+════════════════════════════════════════════════ */
+function startTicker() {
+  if (ticker) clearInterval(ticker);
+  ticker = setInterval(tick, 1000);
+}
+
+function tick() {
+  if (paused) return;
+  stepLeft--;
+  totalLeft--;
+  renderTimer();
+  renderTotal();
+
+  if (stepLeft <= 0) {
+    if (curStep < STEPS.length - 1) {
+      curStep++;
+      flashScreen();
+      loadStep(curStep, true);
+    } else {
+      clearInterval(ticker);
+      showFinish();
+    }
+  }
+}
+
+function renderTimer() {
+  const s   = Math.max(0, stepLeft);
+  const mm  = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss  = String(s % 60).padStart(2, '0');
+  const el  = document.getElementById('timer-display');
+  el.textContent = `${mm}:${ss}`;
+  if (s <= 10 && s > 0) el.classList.add('urgent');
+  else el.classList.remove('urgent');
+}
+
+function renderTotal() {
+  const s  = Math.max(0, totalLeft);
+  const mm = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
+  const lbl = LBL.total[lang1];
+  document.getElementById('total-counter').textContent = `⏱ ${lbl}: ${mm}:${ss}`;
+}
+
+/* ════════════════════════════════════════════════
+   PAUSE
+════════════════════════════════════════════════ */
+function togglePause() {
+  paused = !paused;
+  const ol  = document.getElementById('pause-overlay');
+  const pt  = document.getElementById('pause-text');
+  const ps  = document.getElementById('pause-sub');
+  if (paused) {
+    ol.style.display = 'flex';
+    pt.textContent = LBL.pause[lang1];
+    ps.textContent = LBL.pauseSub[lang1];
+  } else {
+    ol.style.display = 'none';
+  }
+}
+
+/* ════════════════════════════════════════════════
+   FLASH TRANSITION
+════════════════════════════════════════════════ */
+function flashScreen() {
+  const ms = document.getElementById('main-screen');
+  ms.classList.remove('flash');
+  void ms.offsetWidth; // reflow
+  ms.classList.add('flash');
+}
+
+/* ════════════════════════════════════════════════
+   KEYBOARD NAVIGATION
+════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (document.getElementById('main-screen').style.display === 'none') return;
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePause();
+    return;
+  }
+
+  if (e.code === 'ArrowRight' && curStep < STEPS.length - 1) {
+    totalLeft -= stepLeft; // skip remaining time of current step
+    curStep++;
+    flashScreen();
+    loadStep(curStep, true);
+    return;
+  }
+
+  if (e.code === 'ArrowLeft' && curStep > 0) {
+    // Go back: restore time of skipped steps
+    totalLeft += stepLeft;             // restore unused time of current step
+    totalLeft += STEPS[curStep - 1].dur; // add full duration of previous step
+    curStep--;
+    flashScreen();
+    loadStep(curStep, true);
+    return;
+  }
+});
+
+/* Click on main screen to pause (not on bottom bar / pause overlay) */
+document.getElementById('main-screen').addEventListener('click', e => {
+  if (e.target.closest('#pause-overlay') || e.target.closest('#bottom-bar')) return;
+  togglePause();
+});
+
+/* ════════════════════════════════════════════════
+   FINISH
+════════════════════════════════════════════════ */
+function showFinish() {
+  document.getElementById('main-screen').style.display = 'none';
+  const fs = document.getElementById('finish-screen');
+  fs.style.display = 'flex';
+
+  const t1 = LBL.finTitle[lang1];
+  const t2 = LBL.finTitle[lang2];
+  document.getElementById('fin-title').textContent = `${t1} · ${t2}`;
+  document.getElementById('fin-sub').textContent   = LBL.finSub[lang1];
+}
+
+function resetToStart() {
+  if (ticker) clearInterval(ticker);
+  selectedLangs = [];
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('start-btn').classList.remove('ready');
+  document.getElementById('finish-screen').style.display = 'none';
+  document.getElementById('pause-overlay').style.display = 'none';
+  document.getElementById('lang-screen').style.display   = 'flex';
+}
+</script>
+</body>
+</html>
