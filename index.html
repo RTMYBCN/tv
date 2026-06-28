@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@700&family=Outfit:wght@300;400;900&display=swap" rel="stylesheet">
+<style>
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --dk:#0D0D0C; --rd:#A81C1F; --cr:#EDE8DC; --wh:#FFFFFF;
+  --FB:'Outfit','Arial Black',sans-serif;
+  --FD:'Bebas Neue','Arial Black',Impact,sans-serif;
+  --FM:'Space Mono','Courier New',monospace;
+}
+
+html,body { width:1920px; height:1080px; overflow:hidden; background:var(--dk); }
+#bg    { position:fixed; inset:0; z-index:0; background:var(--dk); }
+#flash { position:fixed; inset:0; z-index:99; background:#fff; opacity:0; pointer-events:none; }
+#stage { position:fixed; inset:0; z-index:1; overflow:hidden; }
+
+/* ── SCENES ── */
+.sc { position:absolute; inset:0; opacity:0; pointer-events:none; }
+
+/* ── ALL ANIMATED WORDS START INVISIBLE ── */
+.w { display:inline-block; opacity:0; will-change:transform,opacity,filter; }
+.wb { display:block; opacity:0; will-change:transform,opacity,filter; }
+
+/* ════════ KEYFRAMES ════════ */
+
+@keyframes blurUp {
+  from { opacity:0; transform:translateY(32px); filter:blur(10px); }
+  to   { opacity:1; transform:translateY(0);    filter:blur(0);    }
+}
+@keyframes blurIn {
+  from { opacity:0; filter:blur(20px); }
+  to   { opacity:1; filter:blur(0);    }
+}
+@keyframes blurDown {
+  from { opacity:0; transform:translateY(-32px); filter:blur(10px); }
+  to   { opacity:1; transform:translateY(0);     filter:blur(0);    }
+}
+@keyframes driftL {
+  from { opacity:0; transform:translateX(-80px); filter:blur(4px); }
+  to   { opacity:1; transform:translateX(0);     filter:blur(0);   }
+}
+@keyframes driftR {
+  from { opacity:0; transform:translateX(80px);  filter:blur(4px); }
+  to   { opacity:1; transform:translateX(0);     filter:blur(0);   }
+}
+@keyframes slam {
+  from { opacity:0; transform:scale(1.55); filter:blur(6px); }
+  to   { opacity:1; transform:scale(1);    filter:blur(0);   }
+}
+@keyframes slamS {
+  from { opacity:0; transform:scale(0.6); }
+  to   { opacity:1; transform:scale(1); }
+}
+@keyframes riseUp {
+  from { opacity:0; transform:translateY(70px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+@keyframes fadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes wipeR {
+  from { clip-path:inset(0 100% 0 0); opacity:1; }
+  to   { clip-path:inset(0 0%   0 0); opacity:1; }
+}
+@keyframes trackIn {
+  from { opacity:0; letter-spacing:24px; }
+  to   { opacity:1; letter-spacing:inherit; }
+}
+@keyframes scaleText {
+  from { opacity:0; transform:scaleX(1.35); transform-origin:left; filter:blur(4px); }
+  to   { opacity:1; transform:scaleX(1);    filter:blur(0); }
+}
+
+/* ════════ TYPOGRAPHY ════════ */
+
+/* Outfit 900 */
+.t-xl  { font:900 152px/0.90 var(--FB); color:var(--wh); }
+.t-l   { font:900 116px/0.91 var(--FB); color:var(--wh); }
+.t-m   { font:900  86px/0.93 var(--FB); color:var(--wh); }
+.t-s   { font:900  64px/0.96 var(--FB); color:var(--wh); }
+.t-xs  { font:900  44px/1.0  var(--FB); color:var(--wh); }
+
+/* Bebas Neue */
+.d-xxl { font:normal 340px/0.86 var(--FD); color:var(--wh); letter-spacing:-6px; }
+.d-xl  { font:normal 200px/0.87 var(--FD); color:var(--wh); letter-spacing:-2px; }
+.d-l   { font:normal 132px/0.90 var(--FD); color:var(--wh); }
+.d-m   { font:normal  90px/0.92 var(--FD); color:var(--wh); }
+
+/* Space Mono */
+.m-l   { font:700 34px/1.52 var(--FM); color:rgba(255,255,255,.70); }
+.m-m   { font:700 26px/1.52 var(--FM); color:rgba(255,255,255,.56); }
+.m-s   { font:700 20px/1    var(--FM); letter-spacing:10px; color:rgba(255,255,255,.30); text-transform:uppercase; }
+.m-url { font:700 42px/1    var(--FM); letter-spacing:6px;  color:var(--cr); }
+
+/* ════════ COLOR UTILS ════════ */
+.c-rd   { color:var(--rd)!important; }
+.c-cr   { color:var(--cr)!important; }
+.c-dk   { color:var(--dk)!important; }
+.c-dim  { color:rgba(255,255,255,.45)!important; }
+.c-mdim { color:rgba(255,255,255,.58)!important; }
+.c-ddim { color:rgba(13,13,12,.38)!important; }
+.c-dsub { color:rgba(13,13,12,.68)!important; }
+
+.out-wh  { -webkit-text-stroke:3px rgba(255,255,255,.55); color:transparent!important; }
+.out-rd  { -webkit-text-stroke:3px var(--rd); color:transparent!important; }
+
+/* ════════ LAYOUT HELPERS ════════ */
+.row { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 30px; }
+.col { display:flex; flex-direction:column; }
+.ll  { display:flex; flex-direction:column; justify-content:center; padding:0 110px; }
+.lc  { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 110px; }
+
+/* Vertical bar */
+.vbar { position:absolute; left:52px; top:0; width:7px; background:var(--rd); }
+
+/* Horizontal rule */
+.hline { height:2px; background:currentColor; }
+
+/* List item */
+.li { display:flex; align-items:baseline; gap:18px; margin-top:10px; }
+.li-d { font:normal 50px/1 var(--FD); color:var(--rd); flex-shrink:0; }
+.li-t { font:700 30px/1.35 var(--FM); color:rgba(255,255,255,.70); }
+
+/* SC02 Carousel */
+.sc02-car { position:relative; height:54px; }
+.sc02-item {
+  position:absolute; top:0; left:0;
+  font:700 32px/1.4 var(--FM);
+  color:rgba(255,255,255,.85);
+  opacity:0;
+  transition:opacity 0.40s ease;
+  white-space:nowrap;
+}
+.sc02-item.active { opacity:1; }
+
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="flash"></div>
+<div id="stage">
+
+<!-- ═══════════════════════════════════════════════════
+  SC01 · El arroz no espera. Aquí tampoco.
+  Words blur-up individually, "no espera." slams in red
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc01">
+  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:30px">CARTA · ARROCES</span>
+  <div class="row" style="line-height:0.91">
+    <span class="w t-l" data-a="blurUp" data-d="0.10">El</span>
+    <span class="w t-l" data-a="blurUp" data-d="0.24">arroz</span>
+    <span class="w t-xl c-rd" data-a="slam" data-d="0.45" data-t="0.60">no espera.</span>
+  </div>
+  <div style="height:18px"></div>
+  <div class="row">
+    <span class="w t-m c-mdim" data-a="driftL" data-d="0.85">Aquí</span>
+    <span class="w t-m c-dim" data-a="driftL" data-d="1.0">tampoco.</span>
+  </div>
+  <div style="height:44px"></div>
+  <span class="w m-l" data-a="fadeIn" data-d="1.30">Paella de marisco, arroz de pato, arroz de carrillera, arroz de verduras.</span>
+  <span class="w m-m c-mdim" data-a="fadeIn" data-d="1.55" style="margin-top:8px">Hechos al momento, con caldo propio y azafrán D.O.P.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC02 · Las tapas — BG RED
+  Título grande slam. Guiño. Carousel de tapas.
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc02">
+  <div class="row">
+    <span class="w t-xl" data-a="slam" data-d="0.05" data-t="0.62">Las tapas</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-l" data-a="slam" data-d="0.32" data-t="0.62">que abren el apetito.</span>
+  </div>
+  <div class="row" style="margin-top:20px">
+    <span class="w t-xs c-mdim" data-a="blurUp" data-d="0.85">(Y las que lo cierran.)</span>
+  </div>
+  <div style="height:52px"></div>
+  <div id="sc02-carousel" class="sc02-car">
+    <span class="sc02-item">— Ensaladilla con mayonesa casera de atún</span>
+    <span class="sc02-item">— Langostinos al ajillo</span>
+    <span class="sc02-item">— Alcachofas con salmorreta de ñoras</span>
+    <span class="sc02-item">— Jamón reserva cortado a cuchillo</span>
+    <span class="sc02-item">— Carrillera con salsa de vino tinto y vermut</span>
+    <span class="sc02-item">— Tiras de pollo rebozadas con copos de maíz</span>
+    <span class="sc02-item">— Burrata con tomate confitado</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC03 · La tortilla
+  Words scale down individually
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc03">
+  <div class="row">
+    <span class="w t-l" data-a="blurDown" data-d="0.08">La</span>
+    <span class="w t-l" data-a="blurDown" data-d="0.22">tortilla</span>
+    <span class="w t-l" data-a="blurDown" data-d="0.36">tiene</span>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <span class="w t-xl c-rd" data-a="slam" data-d="0.56" data-t="0.58">más versiones</span>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <span class="w t-m c-dim" data-a="driftL" data-d="0.90">de lo que crees.</span>
+  </div>
+  <div style="height:44px"></div>
+  <div class="li">
+    <span class="w li-d" data-a="fadeIn" data-d="1.02">—</span>
+    <span class="w li-t" data-a="driftL" data-d="1.08">Clásica</span>
+  </div>
+  <div class="li">
+    <span class="w li-d" data-a="fadeIn" data-d="1.24">—</span>
+    <span class="w li-t" data-a="driftL" data-d="1.30">Con sobrasada y miel</span>
+  </div>
+  <div class="li">
+    <span class="w li-d" data-a="fadeIn" data-d="1.46">—</span>
+    <span class="w li-t" data-a="driftL" data-d="1.52">Con anchoas del Cantábrico</span>
+  </div>
+  <div class="li">
+    <span class="w li-d" data-a="fadeIn" data-d="1.68">—</span>
+    <span class="w li-t" data-a="driftL" data-d="1.74">Con alcachofa y queso curado</span>
+  </div>
+  <div class="li">
+    <span class="w li-d" data-a="fadeIn" data-d="1.90">—</span>
+    <span class="w li-t" data-a="driftL" data-d="1.96">Con jamón y queso curado</span>
+  </div>
+  <span class="w m-s" data-a="fadeIn" data-d="2.28" style="margin-top:18px">Todas con pan de masa madre</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC04 · Arroz Albufera D.O.
+  Bebas Neue, wipe reveals per line
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc04">
+  <div class="vbar w" data-a="riseUp" data-d="0.05" data-t="0.5" style="height:0"
+       id="v04bar"></div>
+  <span class="wb d-xl" data-a="wipeR" data-d="0.12" data-t="0.65">ARROZ ALBUFERA</span>
+  <span class="wb d-xl c-rd" data-a="wipeR" data-d="0.55" data-t="0.65">D.O. VALENCIA.</span>
+  <span class="wb d-l c-dim" data-a="wipeR" data-d="0.95" data-t="0.60">AZAFRÁN D.O.P. LA MANCHA.</span>
+  <span class="wb d-l c-dim" data-a="wipeR" data-d="1.28" data-t="0.60">CALDO PROPIO.</span>
+  <div style="height:40px"></div>
+  <span class="w m-l" data-a="blurUp" data-d="1.70">Hay cosas que es mejor no improvisar.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC05 · Crema catalana
+  Elegant centered, slow blur
+═══════════════════════════════════════════════════ -->
+<div class="sc lc" id="sc05">
+  <div class="row" style="justify-content:center">
+    <span class="w t-l c-dk" data-a="blurIn" data-d="0.10" data-t="1.10">Una crema catalana</span>
+  </div>
+  <div class="row" style="justify-content:center; margin-top:4px">
+    <span class="w t-l c-rd" data-a="blurIn" data-d="0.55" data-t="1.10">casera para terminar bien.</span>
+  </div>
+  <div style="height:50px"></div>
+  <span class="w m-l c-dsub" data-a="blurIn" data-d="1.20" data-t="1.0" style="text-align:center">Porque los postres también dicen algo de quien cocina.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC06 · ¿Cuándo fue la última vez?
+  Each word group appears separately, building the question.
+  "con tus manos?" arrives huge at the end.
+═══════════════════════════════════════════════════ -->
+<div class="sc" id="sc06" style="display:flex; flex-direction:column; justify-content:center; padding:0 110px">
+  <div class="row">
+    <span class="w t-m c-mdim" data-a="blurUp" data-d="0.10">¿Cuándo</span>
+    <span class="w t-m c-mdim" data-a="blurUp" data-d="0.28">fue</span>
+    <span class="w t-m c-mdim" data-a="blurUp" data-d="0.44">la última vez</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-m" data-a="blurUp" data-d="0.72">que hiciste</span>
+    <span class="w t-m" data-a="blurUp" data-d="0.96">algo</span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <span class="w t-xl c-rd" data-a="slam" data-d="1.30" data-t="0.65">con tus manos?</span>
+  </div>
+  <div style="height:50px"></div>
+  <span class="w m-l" data-a="fadeIn" data-d="1.85">Taller de paella. Sin experiencia previa. Sin presión.</span>
+  <span class="w m-m c-mdim" data-a="fadeIn" data-d="2.10" style="margin-top:8px">Con resultado garantizado.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC07 · No hace falta saber cocinar — BG RED
+  Big slam, then outline reveal
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc07">
+  <div class="row">
+    <span class="w t-xl" data-a="slam" data-d="0.05" data-t="0.62">No hace falta</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-xl" data-a="slam" data-d="0.30" data-t="0.62">saber cocinar.</span>
+  </div>
+  <div style="height:42px"></div>
+  <div class="row">
+    <span class="w t-s c-mdim" data-a="driftL" data-d="0.78">Solo hace falta</span>
+    <span class="w t-s" data-a="driftL" data-d="1.02">querer hacerlo.</span>
+  </div>
+  <div style="height:36px"></div>
+  <span class="w m-l" data-a="blurUp" data-d="1.38" style="color:rgba(255,255,255,.72)">Todo preparado. Ingredientes listos. Nosotros te guiamos.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC08 · En dos horas y media
+  "2½H" appears first huge, then text builds
+═══════════════════════════════════════════════════ -->
+<div class="sc" id="sc08" style="display:flex; flex-direction:column; justify-content:center; padding:0 110px">
+  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:28px">TALLER DE PAELLA</span>
+  <div class="row">
+    <span class="w t-l" data-a="driftL" data-d="0.12">En dos horas</span>
+    <span class="w t-l c-rd" data-a="driftL" data-d="0.46">y media</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-m" data-a="driftL" data-d="0.75">haces una paella de verdad.</span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <span class="w t-s c-dim" data-a="blurUp" data-d="1.10">Y te la comes.</span>
+  </div>
+  <div style="height:44px"></div>
+  <span class="w m-l" data-a="fadeIn" data-d="1.50">Con cava de bienvenida, pan, crema catalana</span>
+  <span class="w m-m c-mdim" data-a="fadeIn" data-d="1.72" style="margin-top:8px">y bebida incluida.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC09 · Horario — gráfico, números grandes
+═══════════════════════════════════════════════════ -->
+<div class="sc lc" id="sc09">
+  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:32px">HORARIO · TALLER</span>
+  <div class="row" style="justify-content:center">
+    <span class="w d-xl c-cr" data-a="blurUp" data-d="0.15">MIÉ — DOM</span>
+  </div>
+  <div style="height:14px"></div>
+  <div class="row" style="justify-content:center">
+    <span class="w d-xl c-rd" data-a="slam" data-d="0.55" data-t="0.60">18</span>
+    <span class="w d-xl c-dim" data-a="slam" data-d="0.72" data-t="0.60">·</span>
+    <span class="w d-xl c-rd" data-a="slam" data-d="0.88" data-t="0.60">20</span>
+    <span class="w d-xl c-dim" data-a="slam" data-d="1.04" data-t="0.60">·</span>
+    <span class="w d-xl c-rd" data-a="slam" data-d="1.20" data-t="0.60">22H</span>
+  </div>
+  <div style="height:38px"></div>
+  <span class="w m-l" data-a="blurUp" data-d="1.65">En español y en inglés</span>
+  <div style="height:36px"></div>
+  <span class="w m-url" data-a="blurIn" data-d="2.00" data-t="1.0">ricetomeetyou.fun</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC10 · El mejor recuerdo — BG RED
+  Words appear from different directions
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc10">
+  <div class="row">
+    <span class="w t-l" data-a="blurDown" data-d="0.08">El mejor</span>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <span class="w t-l" data-a="blurDown" data-d="0.28">recuerdo</span>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <span class="w t-l" data-a="blurDown" data-d="0.48">de Barcelona</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-l" data-a="blurDown" data-d="0.72">no está en una tienda</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-xl c-dim" data-a="driftL" data-d="1.05" data-t="0.65">de souvenirs.</span>
+  </div>
+  <div style="height:52px"></div>
+  <span class="w t-xs" data-a="blurUp" data-d="1.65">Reserva un taller con nosotros →</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC11 · Sala de reuniones — TEAM BUILDING
+  Words rise up from below
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc11">
+  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:30px">TEAM BUILDING</span>
+  <div class="row">
+    <span class="w t-xl" data-a="riseUp" data-d="0.14">Hay cosas</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-xl" data-a="riseUp" data-d="0.40">que no pasan</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-xl c-rd" data-a="riseUp" data-d="0.66">en una sala</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-xl c-rd" data-a="riseUp" data-d="0.88">de reuniones.</span>
+  </div>
+  <div style="height:46px"></div>
+  <span class="w m-l" data-a="blurUp" data-d="1.42">Team building con paella para grupos de 6 a 25 personas.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC12 · Tres formatos — cada uno entra desde un lado diferente
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc12">
+  <span class="wb d-xl" data-a="driftL" data-d="0.08" data-t="0.72">TEAM FLOW</span>
+  <span class="wb d-xl c-rd" data-a="driftR" data-d="0.40" data-t="0.72">PAELLA CHALLENGE</span>
+  <span class="wb d-xl c-mdim" data-a="driftL" data-d="0.72" data-t="0.72">EXPERIENCE DINNER</span>
+  <div style="height:44px"></div>
+  <span class="w m-l" data-a="blurUp" data-d="1.18">Un equipo que recuerda haber hecho algo juntos de verdad.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC13 · Tu equipo merece algo mejor — centered
+═══════════════════════════════════════════════════ -->
+<div class="sc lc" id="sc13">
+  <div class="row" style="justify-content:center">
+    <span class="w t-xl" data-a="blurUp" data-d="0.08">Tu equipo</span>
+  </div>
+  <div class="row" style="justify-content:center; margin-top:8px">
+    <span class="w t-xl" data-a="blurUp" data-d="0.34">merece</span>
+    <span class="w t-xl c-rd" data-a="blurUp" data-d="0.56">algo mejor.</span>
+  </div>
+  <div class="row" style="justify-content:center; margin-top:14px">
+    <span class="w t-s c-dim" data-a="driftL" data-d="0.90">Que una cena en un restaurante cualquiera.</span>
+  </div>
+  <div style="height:56px"></div>
+  <span class="w d-l c-cr" data-a="trackIn" data-d="1.40" data-t="1.0">RICE TO MEET YOU</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC14 · La paella no se come sola — BG CREAM
+  Dark text, warm and slow
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc14">
+  <div class="vbar w c-dk" data-a="riseUp" data-d="0.06" data-t="0.5"
+       id="v14bar" style="height:0; background:var(--dk)"></div>
+  <span class="w m-s c-ddim" data-a="fadeIn" data-d="0.08" style="margin-bottom:30px">RICE TO MEET YOU</span>
+  <div class="row">
+    <span class="w t-xl c-dk" data-a="blurIn" data-d="0.20" data-t="1.0">La paella</span>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="w t-xl c-dk" data-a="blurIn" data-d="0.65" data-t="1.0">no se come sola.</span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <span class="w t-m c-ddim" data-a="blurIn" data-d="1.08" data-t="1.0">Nunca fue para uno.</span>
+  </div>
+  <div style="height:44px"></div>
+  <span class="w m-l c-dsub" data-a="fadeIn" data-d="1.60">RTMY es el sitio donde pasan cosas entre personas.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC15 · Lo mejor no es el plato — BG RED, MÍNIMO
+  Two phrases. First small, then the second massive.
+═══════════════════════════════════════════════════ -->
+<div class="sc" id="sc15" style="display:flex; flex-direction:column; justify-content:center; padding:0 110px">
+  <div class="row">
+    <span class="w t-s c-mdim" data-a="blurUp" data-d="0.10">Lo mejor no es el plato.</span>
+  </div>
+  <div style="height:28px"></div>
+  <div class="row">
+    <span class="w t-xl" data-a="slam" data-d="0.75" data-t="0.68">Es lo que pasa</span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <span class="w t-l" data-a="slam" data-d="1.05" data-t="0.68">mientras lo hacéis.</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC16 · De 13 a 23, sin parar — RESTAURANTE
+  Bebas display + Outfit body
+═══════════════════════════════════════════════════ -->
+<div class="sc ll" id="sc16">
+  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:28px">RESTAURANTE</span>
+  <div class="row">
+    <span class="w d-xl c-cr" data-a="wipeR" data-d="0.15" data-t="0.65">DE 13 A 23,</span>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <span class="w d-xl c-rd" data-a="wipeR" data-d="0.55" data-t="0.65">SIN PARAR.</span>
+  </div>
+  <div style="height:38px"></div>
+  <span class="w m-l" data-a="driftL" data-d="1.00">Para el vermut, para comer, para las tapas de las seis,</span>
+  <span class="w m-l c-mdim" data-a="driftL" data-d="1.20" style="margin-top:8px">para la copa de después.</span>
+  <div style="height:24px"></div>
+  <span class="w m-m c-dim" data-a="fadeIn" data-d="1.55">RTMY está abierto cuando tú decides que empieza el plan.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC17 · Más de 200 reseñas — social proof
+  "200" aparece dígito a dígito, luego estrellas
+═══════════════════════════════════════════════════ -->
+<div class="sc lc" id="sc17">
+  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:16px">GOOGLE REVIEWS</span>
+  <div class="row" style="justify-content:center; gap:0 4px">
+    <span class="w d-xxl c-rd" data-a="slam" data-d="0.15" data-t="0.55">2</span>
+    <span class="w d-xxl c-rd" data-a="slam" data-d="0.38" data-t="0.55">0</span>
+    <span class="w d-xxl c-rd" data-a="slam" data-d="0.61" data-t="0.55">0</span>
+    <span class="w d-xxl c-rd" data-a="slamS" data-d="0.88" data-t="0.50">+</span>
+  </div>
+  <div style="height:12px"></div>
+  <span class="w" data-a="blurIn" data-d="1.10" data-t="0.8"
+        style="font-size:80px; letter-spacing:14px; color:var(--rd)">★★★★★</span>
+  <div style="height:28px"></div>
+  <span class="w m-l" data-a="blurUp" data-d="1.50">reseñas de 5 estrellas en Google.</span>
+  <span class="w t-s c-mdim" data-a="blurUp" data-d="1.80" style="margin-top:12px">Lo dicen ellos, no nosotros.</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+  SC18 · FINAL — cierre elegante
+  Cada frase aparece sola, con pausa. URL al final.
+═══════════════════════════════════════════════════ -->
+<div class="sc lc" id="sc18">
+  <div class="row" style="justify-content:center">
+    <span class="w t-xl" data-a="blurIn" data-d="0.10" data-t="1.20">Vuelve pronto.</span>
+  </div>
+  <div class="row" style="justify-content:center; margin-top:10px">
+    <span class="w t-xl c-rd" data-a="blurIn" data-d="0.70" data-t="1.20">Trae a alguien.</span>
+  </div>
+  <div class="row" style="justify-content:center; margin-top:10px">
+    <span class="w t-xl c-dim" data-a="blurIn" data-d="1.30" data-t="1.20">Cuéntaselo.</span>
+  </div>
+  <div style="height:62px"></div>
+  <span class="w m-url" data-a="trackIn" data-d="2.10" data-t="1.0">ricetomeetyou.fun</span>
+  <span class="w m-s" data-a="fadeIn" data-d="2.60" style="margin-top:16px">Carrer de la Lleialtat 16, Barcelona</span>
+</div>
+
+</div><!-- /stage -->
+
+<script>
+const $   = id => document.getElementById(id);
+const dly = ms => new Promise(r => setTimeout(r, ms));
+const all = document.querySelectorAll('.sc');
+const bgEl = $('bg');
+const flEl = $('flash');
+
+/* ── SCENE BACKGROUNDS ── */
+const BG = {
+  sc01:'#0D0D0C', sc02:'#A81C1F', sc03:'#0D0D0C',
+  sc04:'#0D0D0C', sc05:'#EDE8DC', sc06:'#0D0D0C',
+  sc07:'#A81C1F', sc08:'#0D0D0C', sc09:'#0D0D0C',
+  sc10:'#A81C1F', sc11:'#0D0D0C', sc12:'#0D0D0C',
+  sc13:'#0D0D0C', sc14:'#EDE8DC', sc15:'#A81C1F',
+  sc16:'#0D0D0C', sc17:'#0D0D0C', sc18:'#0D0D0C',
+};
+
+/* ── SC02 CAROUSEL ── */
+let sc02Timer = null, sc02Idx = 0;
+function startCarousel() {
+  const items = document.querySelectorAll('#sc02-carousel .sc02-item');
+  if (!items.length) return;
+  sc02Idx = 0;
+  items.forEach(el => el.classList.remove('active'));
+  setTimeout(() => {
+    items[0].classList.add('active');
+    sc02Timer = setInterval(() => {
+      items[sc02Idx].classList.remove('active');
+      sc02Idx = (sc02Idx + 1) % items.length;
+      items[sc02Idx].classList.add('active');
+    }, 950);
+  }, 1350);
+}
+function stopCarousel() {
+  if (sc02Timer) { clearInterval(sc02Timer); sc02Timer = null; }
+  document.querySelectorAll('#sc02-carousel .sc02-item').forEach(el => el.classList.remove('active'));
+}
+
+/* ── HELPERS ── */
+function setBg(c) { bgEl.style.background = c; }
+
+async function doFlash(ms = 65) {
+  flEl.style.transition = 'none'; flEl.style.opacity = '1';
+  await dly(ms);
+  flEl.style.transition = 'opacity 0.32s ease'; flEl.style.opacity = '0';
+}
+
+function show(id) {
+  all.forEach(s => { s.style.transition = 'none'; s.style.opacity = '0'; });
+  $(id).style.opacity = '1';
+}
+
+async function fadeOut(id, ms = 450) {
+  const el = $(id);
+  el.style.transition = `opacity ${ms}ms ease`;
+  el.style.opacity = '0';
+  await dly(ms);
+}
+
+/* ── CORE: PLAY ANIMATIONS IN A SCENE ── */
+function playAnims(sceneId) {
+  const els = document.querySelectorAll(`#${sceneId} .w, #${sceneId} .wb`);
+  els.forEach(el => {
+    const S = 1.8; /* global animation speed scale — increase to slow all animations */
+    const a = el.dataset.a || 'blurUp';
+    const d = parseFloat(el.dataset.d || '0') * S;
+    const t = parseFloat(el.dataset.t || '0.82') * S;
+    /* restart trick */
+    el.style.animation = 'none';
+    el.style.opacity   = '0';
+    void el.offsetWidth; /* force reflow */
+    el.style.animation = `${a} ${t}s cubic-bezier(0.16,1,0.3,1) ${d}s both`;
+  });
+}
+
+/* ── SC04 vbar special case ── */
+function animVbar(id, delay) {
+  const el = $(id);
+  if (!el) return;
+  el.style.animation = 'none';
+  el.style.height    = '0';
+  void el.offsetWidth;
+  setTimeout(() => {
+    el.style.transition = 'height 0.55s cubic-bezier(0.16,1,0.3,1)';
+    el.style.height = '1080px';
+  }, delay);
+}
+
+/* ── UNIVERSAL SCENE RUNNER ── */
+async function runScene(id, holdMs, exitType = 'fade') {
+  setBg(BG[id]);
+  show(id);
+
+  /* Handle vbars */
+  if (id === 'sc04') animVbar('v04bar', 100);
+  if (id === 'sc14') animVbar('v14bar', 100);
+  if (id === 'sc02') startCarousel();
+
+  playAnims(id);
+  await dly(holdMs);
+
+  if (exitType === 'fade') {
+    await fadeOut(id, 450);
+  } else if (exitType === 'flash') {
+    $(id).style.transition = 'none'; $(id).style.opacity = '0';
+    await doFlash(65);
+    await dly(80);
+  } else if (exitType === 'cut') {
+    $(id).style.transition = 'none'; $(id).style.opacity = '0';
+    await dly(80);
+  }
+
+  /* Reset all animation states */
+  document.querySelectorAll(`#${id} .w, #${id} .wb`).forEach(el => {
+    el.style.animation = 'none';
+    el.style.opacity   = '0';
+  });
+  if (id === 'sc04' && $('v04bar')) { $('v04bar').style.transition='none'; $('v04bar').style.height='0'; }
+  if (id === 'sc14' && $('v14bar')) { $('v14bar').style.transition='none'; $('v14bar').style.height='0'; }
+  if (id === 'sc02') stopCarousel();
+}
+
+/* ── MAIN LOOP ── */
+async function run() {
+  while (true) {
+    await runScene('sc01', 7700);        // El arroz no espera
+    await runScene('sc02', 11000);       // Las tapas — carousel
+    await runScene('sc03', 9100);        // La tortilla
+    await runScene('sc04', 7500);        // Arroz Albufera D.O.
+    await runScene('sc05', 7100);        // Crema catalana
+    await runScene('sc06', 8000, 'flash'); // ¿Cuándo fue la última vez?
+    await runScene('sc07', 7700);        // No hace falta — RED
+    await runScene('sc08', 7900);        // En dos horas y media
+    await runScene('sc09', 8000, 'flash'); // Horario
+    await runScene('sc10', 7500);        // El mejor recuerdo — RED
+    await runScene('sc11', 8300, 'cut');  // Sala de reuniones
+    await runScene('sc12', 8000);        // Tres formatos
+    await runScene('sc13', 7300);        // Tu equipo merece
+    await runScene('sc14', 7700);        // La paella no se come sola — CREAM
+    await runScene('sc15', 7300, 'flash'); // Lo mejor no es el plato — RED
+    await runScene('sc16', 8000);        // De 13 a 23
+    await runScene('sc17', 7500);        // 200 reseñas
+    await runScene('sc18', 8500);        // Final
+    await dly(200);
+  }
+}
+
+/* ── INIT ── */
+all.forEach(s => s.style.opacity = '0');
+window.addEventListener('load', run);
+</script>
+</body>
+</html>
