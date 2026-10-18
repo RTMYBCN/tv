@@ -1,679 +1,687 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rice to Meet You — TV del local</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@700&family=Outfit:wght@300;400;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════════════
+   Rice to Meet You — bucle para la TV del local
+   26 escenas, ~4:06 a velocidad 1. 1920×1080, escalado a pantalla.
 
-* { margin:0; padding:0; box-sizing:border-box; }
+   Parámetros por URL:
+     ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~3:02)
+     ?band=0       oculta la banda inferior
+     ?reviews=500  cifra de reseñas del conteo
 
+   Tokens, tipografía y motivos vienen del design system de RTMY.
+   Burdeos #741C1C es el único color de marca. Sin negro, sin blanco
+   puro de fondo, sin degradados, sin blur.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── TOKENS (copiados de tokens.css del design system) ── */
 :root {
-  --dk:#0D0D0C; --rd:#A81C1F; --cr:#EDE8DC; --wh:#FFFFFF;
-  --FB:'Outfit','Arial Black',sans-serif;
-  --FD:'Bebas Neue','Arial Black',Impact,sans-serif;
-  --FM:'Space Mono','Courier New',monospace;
+  --rtmy-burdeos-900: #5c1616;
+  --rtmy-burdeos-800: #741c1c;
+  --rtmy-burdeos-700: #8a2424;
+  --rtmy-cream-000: #fbf7ee;
+  --rtmy-cream-100: #f6efdf;
+  --rtmy-cream-200: #efe4cc;
+  --rtmy-ink-900: #241512;
+  --rtmy-ink-700: #4a3630;
+  --rtmy-white: #ffffff;
+  --rtmy-white-veil-65: rgba(255, 255, 255, 0.65);
+  --rtmy-white-veil-35: rgba(255, 255, 255, 0.35);
+  --radius-md: 12px;
+  --font-display: 'Anton', 'Poppins', system-ui, sans-serif;
+  --font-body: 'Poppins', system-ui, sans-serif;
+  --font-editorial: 'Space Mono', 'Poppins', monospace;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html,body { width:1920px; height:1080px; overflow:hidden; background:var(--dk); }
-#bg    { position:fixed; inset:0; z-index:0; background:var(--dk); }
-#flash { position:fixed; inset:0; z-index:99; background:#fff; opacity:0; pointer-events:none; }
-#stage { position:fixed; inset:0; z-index:1; overflow:hidden; }
+/* ── ESCALADO A PANTALLA ── */
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  background: var(--rtmy-burdeos-800); cursor: none;
+}
+/* El frame mide siempre 1920×1080 y se escala entero a la pantalla.
+   Va posicionado en absoluto, no centrado por grid: un hijo más grande
+   que su rejilla se alinea al inicio y acaba descolocado al escalarlo. */
+#fit { position: fixed; inset: 0; overflow: hidden; }
+#stage {
+  width: 1920px; height: 1080px; position: absolute; top: 50%; left: 50%;
+  overflow: hidden; background: var(--rtmy-burdeos-800);
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  transform-origin: center center;
+}
 
-/* ── SCENES ── */
-.sc { position:absolute; inset:0; opacity:0; pointer-events:none; }
+/* ── GROUNDS ── */
+.bur  { background: var(--rtmy-burdeos-800); color: var(--rtmy-white); }
+.crm  { background: var(--rtmy-cream-000);  color: var(--rtmy-ink-900); }
+.bur .dim { color: var(--rtmy-white-veil-65); }
+.crm .dim { color: var(--rtmy-ink-700); }
+.bur .accent { color: var(--rtmy-white-veil-65); }
+.crm .accent { color: var(--rtmy-burdeos-800); }
 
-/* ── ALL ANIMATED WORDS START INVISIBLE ── */
-.w { display:inline-block; opacity:0; will-change:transform,opacity,filter; }
-.wb { display:block; opacity:0; will-change:transform,opacity,filter; }
+/* ── ESCENAS ── */
+.sc {
+  position: absolute; inset: 0; opacity: 0;
+  transition: opacity calc(700ms * var(--spd, 1)) var(--ease-standard);
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 150px 110px; box-sizing: border-box; overflow: hidden;
+}
+.sc.on { opacity: 1; }
+.sc.ctr { align-items: center; text-align: center; }
+.sc.ing-r { padding-right: 500px; }
+.sc.ing-w { padding-right: 400px; }
+.nw, .nw span { white-space: nowrap; }
 
-/* ════════ KEYFRAMES ════════ */
+/* ── MOTIVO DE MARCA: el aro de la sartén del logo ── */
+.ring {
+  position: absolute; border-radius: 50%; border-style: solid;
+  border-width: 4px; opacity: 0; pointer-events: none;
+}
+.bur .ring { border-color: var(--rtmy-burdeos-700); }
+.crm .ring { border-color: var(--rtmy-cream-200); }
+.sc.on .ring {
+  animation: ringIn calc(1500ms * var(--spd, 1)) var(--ease-standard)
+             calc(160ms * var(--spd, 1)) both;
+}
+@keyframes ringIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.ring-a { width: 820px;  height: 820px;  right: -230px; top: -210px; }
+.ring-b { width: 1040px; height: 1040px; left: -340px;  bottom: -380px; }
+.ring-c { width: 660px;  height: 660px;  right: -150px; bottom: -230px; }
+.ring-d { width: 900px;  height: 900px;  left: -300px;  top: -320px; }
 
-@keyframes blurUp {
-  from { opacity:0; transform:translateY(32px); filter:blur(10px); }
-  to   { opacity:1; transform:translateY(0);    filter:blur(0);    }
+/* ── BEATS: cada papel entra a su manera ── */
+.w { display: block; opacity: 0; }
+.sc.on .w {
+  animation-name: fadeUp;
+  animation-duration: calc(600ms * var(--spd, 1));
+  animation-timing-function: var(--ease-standard);
+  animation-delay: calc(var(--d, 0ms) * var(--spd, 1) * 1.3);
+  animation-fill-mode: both;
 }
-@keyframes blurIn {
-  from { opacity:0; filter:blur(20px); }
-  to   { opacity:1; filter:blur(0);    }
+.sc.on .w.a-fade   { animation-name: fadeIn; }
+.sc.on .w.a-driftL { animation-name: driftL; }
+.sc.on .w.a-scale  { animation-name: scaleIn; }
+.sc.on .w.a-type   { animation-name: typeRise; animation-duration: calc(640ms * var(--spd, 1)); }
+.sc.on .w.a-eyebrow{ animation-name: trackIn;  animation-duration: calc(760ms * var(--spd, 1)); }
+.sc.on .w.a-body   { animation-name: bodyUp;   animation-duration: calc(700ms * var(--spd, 1)); }
+.wi { display: inline-block; opacity: 0; }
+.sc.on .wi {
+  animation-name: bodyUp;
+  animation-duration: calc(620ms * var(--spd, 1));
+  animation-timing-function: var(--ease-standard);
+  animation-delay: calc(var(--d, 0ms) * var(--spd, 1) * 1.3);
+  animation-fill-mode: both;
 }
-@keyframes blurDown {
-  from { opacity:0; transform:translateY(-32px); filter:blur(10px); }
-  to   { opacity:1; transform:translateY(0);     filter:blur(0);    }
-}
-@keyframes driftL {
-  from { opacity:0; transform:translateX(-80px); filter:blur(4px); }
-  to   { opacity:1; transform:translateX(0);     filter:blur(0);   }
-}
-@keyframes driftR {
-  from { opacity:0; transform:translateX(80px);  filter:blur(4px); }
-  to   { opacity:1; transform:translateX(0);     filter:blur(0);   }
-}
-@keyframes slam {
-  from { opacity:0; transform:scale(1.55); filter:blur(6px); }
-  to   { opacity:1; transform:scale(1);    filter:blur(0);   }
-}
-@keyframes slamS {
-  from { opacity:0; transform:scale(0.6); }
-  to   { opacity:1; transform:scale(1); }
-}
-@keyframes riseUp {
-  from { opacity:0; transform:translateY(70px); }
-  to   { opacity:1; transform:translateY(0);    }
-}
-@keyframes fadeIn {
-  from { opacity:0; }
-  to   { opacity:1; }
-}
-@keyframes wipeR {
-  from { clip-path:inset(0 100% 0 0); opacity:1; }
-  to   { clip-path:inset(0 0%   0 0); opacity:1; }
+.inl { display: inline-block; }
+
+@keyframes fadeUp  { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bodyUp  { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes driftL  { from { opacity: 0; transform: translateX(-44px); } to { opacity: 1; transform: none; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.92); }       to { opacity: 1; transform: scale(1); } }
+@keyframes typeRise {
+  from { opacity: 0; transform: translateY(44px); clip-path: inset(100% -8% -12% -8%); }
+  to   { opacity: 1; transform: translateY(0);    clip-path: inset(-12% -8% -12% -8%); }
 }
 @keyframes trackIn {
-  from { opacity:0; letter-spacing:24px; }
-  to   { opacity:1; letter-spacing:inherit; }
-}
-@keyframes scaleText {
-  from { opacity:0; transform:scaleX(1.35); transform-origin:left; filter:blur(4px); }
-  to   { opacity:1; transform:scaleX(1);    filter:blur(0); }
+  from { opacity: 0; letter-spacing: 0.36em; }
+  to   { opacity: 1; letter-spacing: 0.22em; }
 }
 
-/* ════════ TYPOGRAPHY ════════ */
+/* Filete editorial bajo el antetítulo */
+.rule { width: 150px; height: 4px; margin-top: 22px; transform-origin: left center; }
+.ctr .rule { transform-origin: center; }
+.bur .rule { background: var(--rtmy-white-veil-35); }
+.crm .rule { background: var(--rtmy-burdeos-800); }
+.sc.on .w.rule { animation-name: ruleIn; animation-duration: calc(560ms * var(--spd, 1)); }
+@keyframes ruleIn { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
 
-/* Outfit 900 */
-.t-xl  { font:900 152px/0.90 var(--FB); color:var(--wh); }
-.t-l   { font:900 116px/0.91 var(--FB); color:var(--wh); }
-.t-m   { font:900  86px/0.93 var(--FB); color:var(--wh); }
-.t-s   { font:900  64px/0.96 var(--FB); color:var(--wh); }
-.t-xs  { font:900  44px/1.0  var(--FB); color:var(--wh); }
-
-/* Bebas Neue */
-.d-xxl { font:normal 340px/0.86 var(--FD); color:var(--wh); letter-spacing:-6px; }
-.d-xl  { font:normal 200px/0.87 var(--FD); color:var(--wh); letter-spacing:-2px; }
-.d-l   { font:normal 132px/0.90 var(--FD); color:var(--wh); }
-.d-m   { font:normal  90px/0.92 var(--FD); color:var(--wh); }
-
-/* Space Mono */
-.m-l   { font:700 34px/1.52 var(--FM); color:rgba(255,255,255,.70); }
-.m-m   { font:700 26px/1.52 var(--FM); color:rgba(255,255,255,.56); }
-.m-s   { font:700 20px/1    var(--FM); letter-spacing:10px; color:rgba(255,255,255,.30); text-transform:uppercase; }
-.m-url { font:700 42px/1    var(--FM); letter-spacing:6px;  color:var(--cr); }
-
-/* ════════ COLOR UTILS ════════ */
-.c-rd   { color:var(--rd)!important; }
-.c-cr   { color:var(--cr)!important; }
-.c-dk   { color:var(--dk)!important; }
-.c-dim  { color:rgba(255,255,255,.45)!important; }
-.c-mdim { color:rgba(255,255,255,.58)!important; }
-.c-ddim { color:rgba(13,13,12,.38)!important; }
-.c-dsub { color:rgba(13,13,12,.68)!important; }
-
-.out-wh  { -webkit-text-stroke:3px rgba(255,255,255,.55); color:transparent!important; }
-.out-rd  { -webkit-text-stroke:3px var(--rd); color:transparent!important; }
-
-/* ════════ LAYOUT HELPERS ════════ */
-.row { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 30px; }
-.col { display:flex; flex-direction:column; }
-.ll  { display:flex; flex-direction:column; justify-content:center; padding:0 110px; }
-.lc  { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 110px; }
-
-/* Vertical bar */
-.vbar { position:absolute; left:52px; top:0; width:7px; background:var(--rd); }
-
-/* Horizontal rule */
-.hline { height:2px; background:currentColor; }
-
-/* List item */
-.li { display:flex; align-items:baseline; gap:18px; margin-top:10px; }
-.li-d { font:normal 50px/1 var(--FD); color:var(--rd); flex-shrink:0; }
-.li-t { font:700 30px/1.35 var(--FM); color:rgba(255,255,255,.70); }
-
-/* SC02 Carousel */
-.sc02-car { position:relative; height:54px; }
-.sc02-item {
-  position:absolute; top:0; left:0;
-  font:700 32px/1.4 var(--FM);
-  color:rgba(255,255,255,.85);
-  opacity:0;
-  transition:opacity 0.40s ease;
-  white-space:nowrap;
+/* ── TIPOGRAFÍA ── */
+.d-xxl { font-family: var(--font-display); font-size: 200px; line-height: 0.92; letter-spacing: 0.01em; }
+.d-xl  { font-family: var(--font-display); font-size: 152px; line-height: 0.96; letter-spacing: 0.01em; }
+.d-l   { font-family: var(--font-display); font-size: 124px; line-height: 1.0;  letter-spacing: 0.01em; }
+.d-m   { font-family: var(--font-display); font-size: 96px;  line-height: 1.04; letter-spacing: 0.02em; }
+.t-xl  { font-family: var(--font-body); font-weight: 700; font-size: 170px; line-height: 1.0; letter-spacing: -0.015em; }
+.t-l   { font-family: var(--font-body); font-weight: 700; font-size: 128px; line-height: 1.04; letter-spacing: -0.01em; }
+.t-m   { font-family: var(--font-body); font-weight: 600; font-size: 84px;  line-height: 1.1; }
+.t-s   { font-family: var(--font-body); font-weight: 500; font-size: 56px;  line-height: 1.2; }
+.b-l   { font-family: var(--font-body); font-weight: 400; font-size: 44px;  line-height: 1.4; }
+.b     { font-family: var(--font-body); font-weight: 400; font-size: 36px;  line-height: 1.45; }
+.eyebrow { font-family: var(--font-editorial); font-size: 34px; letter-spacing: 0.22em; text-transform: uppercase; }
+.url { font-family: var(--font-editorial); font-size: 52px; letter-spacing: 0.14em; }
+.li {
+  font-family: var(--font-editorial); font-size: 40px;
+  letter-spacing: 0.08em; line-height: 1.5;
+  display: flex; align-items: baseline; gap: 26px;
 }
-.sc02-item.active { opacity:1; }
+.li .bullet { opacity: 0.55; }
+.li .step { opacity: 0.55; min-width: 86px; }
+.stars { font-family: var(--font-body); font-size: 96px; letter-spacing: 20px; }
+/* Tres formatos: tono propio en escala de claridad, con marca delante */
+.fmt { display: flex; align-items: center; gap: 30px; }
+.fmt-bar { width: 72px; height: 12px; flex: none; border-radius: 2px; }
 
+/* ── CARRUSEL VERTICAL DE TAPAS ── */
+.scroll-win { height: 430px; overflow: hidden; margin-top: 38px; }
+.scroll-track { display: flex; flex-direction: column; }
+.scroll-track .li { height: 86px; align-items: center; }
+.sc.on .scroll-track { animation: listScroll calc(11000ms * var(--spd, 1)) linear infinite; }
+@keyframes listScroll { from { transform: translateY(0); } to { transform: translateY(-602px); } }
+
+/* ── ILUSTRACIONES DE INGREDIENTE ──
+   Una por escena, entera dentro del frame, con deriva corta hacia dentro.
+   Las de canto blanco a sangre (aceite, ajo, calamar, cebolla, azafrán)
+   solo sobre crema. vitrocerámica queda fuera del bucle. */
+.ing { position: absolute; opacity: 0; pointer-events: none; }
+.sc.on .ing {
+  animation-name: ingDrift;
+  animation-duration: calc(var(--idur, 10000ms) * var(--spd, 1));
+  animation-timing-function: var(--ease-standard);
+  animation-delay: calc(var(--d, 0ms) * var(--spd, 1) * 1.3);
+  animation-fill-mode: both;
+}
+@keyframes ingDrift {
+  0%   { opacity: 0;    transform: translate(var(--ix, 0px), var(--iy, 0px)) scale(0.92); }
+  16%  { opacity: 0.95; transform: translate(0px, 0px) scale(1); }
+  76%  { opacity: 0.95; transform: translate(0px, 0px) scale(1); }
+  100% { opacity: 0;    transform: translate(calc(var(--ix, 0px) * -0.55), calc(var(--iy, 0px) * -0.55)) scale(1); }
+}
+.s-rmid { width: 320px; right: 120px; top: 380px;    --ix: 64px;  --iy: 30px; }
+.s-rsm  { width: 250px; right: 90px;  top: 400px;    --ix: 64px;  --iy: 30px; }
+.s-rbot { width: 260px; right: 120px; bottom: 170px; --ix: 64px;  --iy: 46px; }
+.s-llow { width: 260px; left: 90px;   bottom: 190px; --ix: -64px; --iy: 46px; }
+.s-rctr { width: 260px; right: 90px;  top: 170px;    --ix: 64px;  --iy: -38px; }
+.s-tall { width: 340px; }
+
+/* ── QR DE RESERVA ── */
+.qr-code { width: 380px; height: 380px; display: block; border-radius: var(--radius-md); }
+
+/* ── BANDA INFERIOR ── */
+.band {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 96px;
+  display: flex; align-items: center; justify-content: center; gap: 30px;
+  font-family: var(--font-editorial); font-size: 34px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  border-top: 3px solid transparent;
+  transition: opacity calc(700ms * var(--spd, 1)) var(--ease-standard),
+              color calc(700ms * var(--spd, 1)) var(--ease-standard),
+              border-color calc(700ms * var(--spd, 1)) var(--ease-standard),
+              background-color calc(700ms * var(--spd, 1)) var(--ease-standard);
+}
+.band .sep { opacity: 0.5; }
+.band.on-bur { background: var(--rtmy-burdeos-900); color: var(--rtmy-white-veil-65); border-top-color: var(--rtmy-burdeos-700); }
+.band.on-crm { background: var(--rtmy-cream-100);  color: var(--rtmy-burdeos-800); border-top-color: var(--rtmy-cream-200); }
+.band.is-off { opacity: 0; }
+
+/* ── SELLO DE MARCA ──
+   El PNG ya es la sartén redonda con sus asas: va directo sobre el
+   burdeos, sin plato ni círculo detrás que se las corte. */
+.seal { width: 440px; height: 440px; object-fit: contain; }
 </style>
 </head>
 <body>
-<div id="bg"></div>
-<div id="flash"></div>
-<div id="stage">
+<div id="fit"><div id="stage">
 
-<!-- ═══════════════════════════════════════════════════
-  SC01 · El arroz no espera. Aquí tampoco.
-  Words blur-up individually, "no espera." slams in red
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc01">
-  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:30px">CARTA · ARROCES</span>
-  <div class="row" style="line-height:0.91">
-    <span class="w t-l" data-a="blurUp" data-d="0.10">El</span>
-    <span class="w t-l" data-a="blurUp" data-d="0.24">arroz</span>
-    <span class="w t-xl c-rd" data-a="slam" data-d="0.45" data-t="0.60">no espera.</span>
+  <!-- 1 · INTRO — tarjeta de marca -->
+  <div class="sc ctr bur">
+    <div class="ring ring-b"></div>
+    <img class="w a-scale seal" src="assets/logo-seal.png" alt="Rice to Meet You" style="--d: 120ms">
+    <div class="w a-type d-l" style="--d: 760ms; margin-top: 48px">RICE TO MEET YOU</div>
+    <div class="w rule" style="--d: 1100ms"></div>
+    <div class="w a-body url dim" style="--d: 1340ms; margin-top: 26px">ricetomeetyou.fun</div>
   </div>
-  <div style="height:18px"></div>
-  <div class="row">
-    <span class="w t-m c-mdim" data-a="driftL" data-d="0.85">Aquí</span>
-    <span class="w t-m c-dim" data-a="driftL" data-d="1.0">tampoco.</span>
-  </div>
-  <div style="height:44px"></div>
-  <span class="w m-l" data-a="fadeIn" data-d="1.30">Paella de marisco, arroz de pato, arroz de carrillera, arroz de verduras.</span>
-  <span class="w m-m c-mdim" data-a="fadeIn" data-d="1.55" style="margin-top:8px">Hechos al momento, con caldo propio y azafrán D.O.P.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC02 · Las tapas — BG RED
-  Título grande slam. Guiño. Carousel de tapas.
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc02">
-  <div class="row">
-    <span class="w t-xl" data-a="slam" data-d="0.05" data-t="0.62">Las tapas</span>
+  <!-- 2 · Arroces -->
+  <div class="sc crm ing-w">
+    <div class="ring ring-a"></div>
+    <img class="ing s-rsm" src="assets/arroz.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Carta · Arroces</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l" style="--d: 560ms; margin-top: 30px">El arroz</div>
+    <div class="w a-type t-xl accent" style="--d: 880ms">no espera.</div>
+    <div class="w a-driftL t-m dim" style="--d: 1220ms; margin-top: 18px">Aquí tampoco.</div>
+    <div class="b enum nw" style="margin-top: 46px"><span class="wi" style="--d: 1620ms">Paella de marisco,</span> <span class="wi" style="--d: 1780ms">arroz de pato,</span> <span class="wi" style="--d: 1940ms">arroz de carrillera,</span> <span class="wi" style="--d: 2100ms">arroz de verduras.</span></div>
+    <div class="w a-body b dim" style="--d: 2340ms; margin-top: 14px">Hechos al momento, con caldo propio y azafrán D.O.P.</div>
   </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-l" data-a="slam" data-d="0.32" data-t="0.62">que abren el apetito.</span>
-  </div>
-  <div class="row" style="margin-top:20px">
-    <span class="w t-xs c-mdim" data-a="blurUp" data-d="0.85">(Y las que lo cierran.)</span>
-  </div>
-  <div style="height:52px"></div>
-  <div id="sc02-carousel" class="sc02-car">
-    <span class="sc02-item">— Ensaladilla con mayonesa casera de atún</span>
-    <span class="sc02-item">— Langostinos al ajillo</span>
-    <span class="sc02-item">— Alcachofas con salmorreta de ñoras</span>
-    <span class="sc02-item">— Jamón reserva cortado a cuchillo</span>
-    <span class="sc02-item">— Carrillera con salsa de vino tinto y vermut</span>
-    <span class="sc02-item">— Tiras de pollo rebozadas con copos de maíz</span>
-    <span class="sc02-item">— Burrata con tomate confitado</span>
-  </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC03 · La tortilla
-  Words scale down individually
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc03">
-  <div class="row">
-    <span class="w t-l" data-a="blurDown" data-d="0.08">La</span>
-    <span class="w t-l" data-a="blurDown" data-d="0.22">tortilla</span>
-    <span class="w t-l" data-a="blurDown" data-d="0.36">tiene</span>
+  <!-- 3 · Tapas — la carta pasa en vertical -->
+  <div class="sc bur">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rbot s-tall" src="assets/vino.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Carta · Tapas</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l nw" style="--d: 560ms; margin-top: 28px; font-size: 100px">Las tapas <span class="accent inl">que abren el apetito.</span></div>
+    <div class="w a-body b dim" style="--d: 900ms; margin-top: 12px">(Y las que lo cierran.)</div>
+    <div class="w a-fade scroll-win" style="--d: 1240ms">
+      <div class="scroll-track">
+        <div class="li"><span class="bullet">—</span><span>Ensaladilla con mayonesa casera de atún</span></div>
+        <div class="li"><span class="bullet">—</span><span>Langostinos al ajillo</span></div>
+        <div class="li"><span class="bullet">—</span><span>Alcachofas con salmorreta de ñoras</span></div>
+        <div class="li"><span class="bullet">—</span><span>Jamón reserva cortado a cuchillo</span></div>
+        <div class="li"><span class="bullet">—</span><span>Carrillera con salsa de vino tinto y vermut</span></div>
+        <div class="li"><span class="bullet">—</span><span>Tiras de pollo rebozadas con copos de maíz</span></div>
+        <div class="li"><span class="bullet">—</span><span>Burrata con tomate confitado</span></div>
+        <div class="li" aria-hidden="true"><span class="bullet">—</span><span>Ensaladilla con mayonesa casera de atún</span></div>
+        <div class="li" aria-hidden="true"><span class="bullet">—</span><span>Langostinos al ajillo</span></div>
+        <div class="li" aria-hidden="true"><span class="bullet">—</span><span>Alcachofas con salmorreta de ñoras</span></div>
+        <div class="li" aria-hidden="true"><span class="bullet">—</span><span>Jamón reserva cortado a cuchillo</span></div>
+        <div class="li" aria-hidden="true"><span class="bullet">—</span><span>Carrillera con salsa de vino tinto y vermut</span></div>
+        <div class="li" aria-hidden="true"><span class="bullet">—</span><span>Tiras de pollo rebozadas con copos de maíz</span></div>
+        <div class="li" aria-hidden="true"><span class="bullet">—</span><span>Burrata con tomate confitado</span></div>
+      </div>
+    </div>
   </div>
-  <div class="row" style="margin-top:4px">
-    <span class="w t-xl c-rd" data-a="slam" data-d="0.56" data-t="0.58">más versiones</span>
-  </div>
-  <div class="row" style="margin-top:4px">
-    <span class="w t-m c-dim" data-a="driftL" data-d="0.90">de lo que crees.</span>
-  </div>
-  <div style="height:44px"></div>
-  <div class="li">
-    <span class="w li-d" data-a="fadeIn" data-d="1.02">—</span>
-    <span class="w li-t" data-a="driftL" data-d="1.08">Clásica</span>
-  </div>
-  <div class="li">
-    <span class="w li-d" data-a="fadeIn" data-d="1.24">—</span>
-    <span class="w li-t" data-a="driftL" data-d="1.30">Con sobrasada y miel</span>
-  </div>
-  <div class="li">
-    <span class="w li-d" data-a="fadeIn" data-d="1.46">—</span>
-    <span class="w li-t" data-a="driftL" data-d="1.52">Con anchoas del Cantábrico</span>
-  </div>
-  <div class="li">
-    <span class="w li-d" data-a="fadeIn" data-d="1.68">—</span>
-    <span class="w li-t" data-a="driftL" data-d="1.74">Con alcachofa y queso curado</span>
-  </div>
-  <div class="li">
-    <span class="w li-d" data-a="fadeIn" data-d="1.90">—</span>
-    <span class="w li-t" data-a="driftL" data-d="1.96">Con jamón y queso curado</span>
-  </div>
-  <span class="w m-s" data-a="fadeIn" data-d="2.28" style="margin-top:18px">Todas con pan de masa madre</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC04 · Arroz Albufera D.O.
-  Bebas Neue, wipe reveals per line
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc04">
-  <div class="vbar w" data-a="riseUp" data-d="0.05" data-t="0.5" style="height:0"
-       id="v04bar"></div>
-  <span class="wb d-xl" data-a="wipeR" data-d="0.12" data-t="0.65">ARROZ ALBUFERA</span>
-  <span class="wb d-xl c-rd" data-a="wipeR" data-d="0.55" data-t="0.65">D.O. VALENCIA.</span>
-  <span class="wb d-l c-dim" data-a="wipeR" data-d="0.95" data-t="0.60">AZAFRÁN D.O.P. LA MANCHA.</span>
-  <span class="wb d-l c-dim" data-a="wipeR" data-d="1.28" data-t="0.60">CALDO PROPIO.</span>
-  <div style="height:40px"></div>
-  <span class="w m-l" data-a="blurUp" data-d="1.70">Hay cosas que es mejor no improvisar.</span>
-</div>
+  <!-- 4 · Tortilla -->
+  <div class="sc crm">
+    <div class="ring ring-d"></div>
+    <img class="ing s-rbot" src="assets/cebolla.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Carta · Tortillas</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l nw" style="--d: 560ms; margin-top: 28px; font-size: 116px">Tortilla con más versiones</div>
+    <div class="w a-driftL t-m accent" style="--d: 940ms; margin-top: 14px">de las que crees.</div>
+    <div style="margin-top: 42px">
+      <div class="w a-body li" style="--d: 1400ms"><span class="bullet">—</span><span>Clásica</span></div>
+      <div class="w a-body li" style="--d: 1540ms"><span class="bullet">—</span><span>Con sobrasada y miel</span></div>
+      <div class="w a-body li" style="--d: 1680ms"><span class="bullet">—</span><span>Con anchoas del Cantábrico</span></div>
+      <div class="w a-body li" style="--d: 1820ms"><span class="bullet">—</span><span>Con alcachofa y queso curado</span></div>
+      <div class="w a-body li" style="--d: 1960ms"><span class="bullet">—</span><span>Con jamón y queso curado</span></div>
+    </div>
+  </div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC05 · Crema catalana
-  Elegant centered, slow blur
-═══════════════════════════════════════════════════ -->
-<div class="sc lc" id="sc05">
-  <div class="row" style="justify-content:center">
-    <span class="w t-l c-dk" data-a="blurIn" data-d="0.10" data-t="1.10">Una crema catalana</span>
+  <!-- 5 · Arroz Albufera -->
+  <div class="sc bur ing-r">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rmid" src="assets/fumet-caldo.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Materia prima</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type d-xl" style="--d: 560ms; margin-top: 28px">ARROZ ALBUFERA</div>
+    <div class="w a-type d-xl accent" style="--d: 860ms">D.O. VALENCIA.</div>
+    <div class="w a-type d-m dim" style="--d: 1180ms; margin-top: 16px">AZAFRÁN D.O.P. LA MANCHA.</div>
+    <div class="w a-type d-m dim" style="--d: 1420ms">CALDO PROPIO.</div>
+    <div class="w a-body b-l" style="--d: 1860ms; margin-top: 44px">Hay cosas que es mejor no improvisar.</div>
   </div>
-  <div class="row" style="justify-content:center; margin-top:4px">
-    <span class="w t-l c-rd" data-a="blurIn" data-d="0.55" data-t="1.10">casera para terminar bien.</span>
-  </div>
-  <div style="height:50px"></div>
-  <span class="w m-l c-dsub" data-a="blurIn" data-d="1.20" data-t="1.0" style="text-align:center">Porque los postres también dicen algo de quien cocina.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC06 · ¿Cuándo fue la última vez?
-  Each word group appears separately, building the question.
-  "con tus manos?" arrives huge at the end.
-═══════════════════════════════════════════════════ -->
-<div class="sc" id="sc06" style="display:flex; flex-direction:column; justify-content:center; padding:0 110px">
-  <div class="row">
-    <span class="w t-m c-mdim" data-a="blurUp" data-d="0.10">¿Cuándo</span>
-    <span class="w t-m c-mdim" data-a="blurUp" data-d="0.28">fue</span>
-    <span class="w t-m c-mdim" data-a="blurUp" data-d="0.44">la última vez</span>
+  <!-- 6 · Crema catalana -->
+  <div class="sc ctr crm">
+    <div class="ring ring-b"></div>
+    <img class="ing s-llow" src="assets/azafran.png" alt="" style="--d: 400ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Postres</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l nw" style="--d: 600ms; margin-top: 30px">Una crema catalana</div>
+    <div class="w a-type t-l accent nw" style="--d: 980ms">para terminar bien.</div>
+    <div class="w a-body b-l dim" style="--d: 1480ms; margin-top: 46px">Porque los postres también dicen algo de quien cocina.</div>
   </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-m" data-a="blurUp" data-d="0.72">que hiciste</span>
-    <span class="w t-m" data-a="blurUp" data-d="0.96">algo</span>
-  </div>
-  <div class="row" style="margin-top:8px">
-    <span class="w t-xl c-rd" data-a="slam" data-d="1.30" data-t="0.65">con tus manos?</span>
-  </div>
-  <div style="height:50px"></div>
-  <span class="w m-l" data-a="fadeIn" data-d="1.85">Taller de paella. Sin experiencia previa. Sin presión.</span>
-  <span class="w m-m c-mdim" data-a="fadeIn" data-d="2.10" style="margin-top:8px">Con resultado garantizado.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC07 · No hace falta saber cocinar — BG RED
-  Big slam, then outline reveal
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc07">
-  <div class="row">
-    <span class="w t-xl" data-a="slam" data-d="0.05" data-t="0.62">No hace falta</span>
+  <!-- 7 · Hay paella para todos -->
+  <div class="sc bur ing-w">
+    <div class="ring ring-a"></div>
+    <img class="ing s-rsm" src="assets/pimiento.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Cocina · Para todos</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-xl" style="--d: 560ms; margin-top: 30px">Hay paella</div>
+    <div class="w a-type t-xl accent" style="--d: 920ms">para todos.</div>
+    <div class="t-s dim enum nw" style="margin-top: 24px"><span class="wi" style="--d: 1320ms">Vegetariana,</span> <span class="wi" style="--d: 1480ms">sin gluten,</span> <span class="wi" style="--d: 1640ms">sin marisco.</span></div>
+    <div class="enum b-l nw" style="margin-top: 42px"><span class="wi" style="--d: 1900ms">Dilo al reservar y la cocina se adapta.</span> <span class="wi" style="--d: 2100ms">Sin problema.</span></div>
   </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-xl" data-a="slam" data-d="0.30" data-t="0.62">saber cocinar.</span>
-  </div>
-  <div style="height:42px"></div>
-  <div class="row">
-    <span class="w t-s c-mdim" data-a="driftL" data-d="0.78">Solo hace falta</span>
-    <span class="w t-s" data-a="driftL" data-d="1.02">querer hacerlo.</span>
-  </div>
-  <div style="height:36px"></div>
-  <span class="w m-l" data-a="blurUp" data-d="1.38" style="color:rgba(255,255,255,.72)">Todo preparado. Ingredientes listos. Nosotros te guiamos.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC08 · En dos horas y media
-  "2½H" appears first huge, then text builds
-═══════════════════════════════════════════════════ -->
-<div class="sc" id="sc08" style="display:flex; flex-direction:column; justify-content:center; padding:0 110px">
-  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:28px">TALLER DE PAELLA</span>
-  <div class="row">
-    <span class="w t-l" data-a="driftL" data-d="0.12">En dos horas</span>
-    <span class="w t-l c-rd" data-a="driftL" data-d="0.46">y media</span>
+  <!-- 8 · ¿Con tus manos? -->
+  <div class="sc crm ing-w">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rsm" src="assets/ajo.png" alt="" style="--d: 300ms">
+    <div class="w a-type t-m dim nw" style="--d: 120ms">¿Cuándo fue la última vez</div>
+    <div class="w a-type t-m nw" style="--d: 500ms; margin-top: 10px">que hiciste algo</div>
+    <div class="w a-type t-xl accent nw" style="--d: 920ms; margin-top: 12px">con tus manos?</div>
+    <div class="w rule" style="--d: 1340ms"></div>
+    <div class="enum b-l nw" style="margin-top: 34px"><span class="wi" style="--d: 1560ms">Taller de paella.</span> <span class="wi" style="--d: 1720ms">Sin experiencia previa.</span> <span class="wi" style="--d: 1880ms">Sin presión.</span></div>
+    <div class="w a-body b dim" style="--d: 2080ms; margin-top: 14px">Con resultado garantizado.</div>
   </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-m" data-a="driftL" data-d="0.75">haces una paella de verdad.</span>
-  </div>
-  <div class="row" style="margin-top:8px">
-    <span class="w t-s c-dim" data-a="blurUp" data-d="1.10">Y te la comes.</span>
-  </div>
-  <div style="height:44px"></div>
-  <span class="w m-l" data-a="fadeIn" data-d="1.50">Con cava de bienvenida, pan, crema catalana</span>
-  <span class="w m-m c-mdim" data-a="fadeIn" data-d="1.72" style="margin-top:8px">y bebida incluida.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC09 · Horario — gráfico, números grandes
-═══════════════════════════════════════════════════ -->
-<div class="sc lc" id="sc09">
-  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:32px">HORARIO · TALLER</span>
-  <div class="row" style="justify-content:center">
-    <span class="w d-xl c-cr" data-a="blurUp" data-d="0.15">MIÉ — DOM</span>
+  <!-- 9 · No hace falta saber cocinar -->
+  <div class="sc bur ing-w">
+    <div class="ring ring-d"></div>
+    <img class="ing s-rsm" src="assets/salmorreta.png" alt="" style="--d: 400ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Taller de paella</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-xl nw" style="--d: 560ms; margin-top: 30px; font-size: 140px">No hace falta</div>
+    <div class="w a-type t-xl accent nw" style="--d: 900ms; font-size: 140px">saber cocinar.</div>
+    <div class="w a-driftL t-s dim nw" style="--d: 1280ms; margin-top: 24px">Solo hace falta querer hacerlo.</div>
+    <div class="enum b-l nw" style="margin-top: 44px"><span class="wi" style="--d: 1700ms">Todo preparado.</span> <span class="wi" style="--d: 1860ms">Ingredientes listos.</span> <span class="wi" style="--d: 2020ms">Nosotros te guiamos.</span></div>
   </div>
-  <div style="height:14px"></div>
-  <div class="row" style="justify-content:center">
-    <span class="w d-xl c-rd" data-a="slam" data-d="0.55" data-t="0.60">18</span>
-    <span class="w d-xl c-dim" data-a="slam" data-d="0.72" data-t="0.60">·</span>
-    <span class="w d-xl c-rd" data-a="slam" data-d="0.88" data-t="0.60">20</span>
-    <span class="w d-xl c-dim" data-a="slam" data-d="1.04" data-t="0.60">·</span>
-    <span class="w d-xl c-rd" data-a="slam" data-d="1.20" data-t="0.60">22H</span>
-  </div>
-  <div style="height:38px"></div>
-  <span class="w m-l" data-a="blurUp" data-d="1.65">En español y en inglés</span>
-  <div style="height:36px"></div>
-  <span class="w m-url" data-a="blurIn" data-d="2.00" data-t="1.0">ricetomeetyou.fun</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC10 · El mejor recuerdo — BG RED
-  Words appear from different directions
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc10">
-  <div class="row">
-    <span class="w t-l" data-a="blurDown" data-d="0.08">El mejor</span>
+  <!-- 10 · El taller en tres pasos -->
+  <div class="sc crm ing-w">
+    <div class="ring ring-a"></div>
+    <img class="ing s-rsm" src="assets/aceite.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">El taller, paso a paso</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l nw" style="--d: 560ms; margin-top: 28px; font-size: 116px">Tres pasos. <span class="accent inl">Nada más.</span></div>
+    <div style="margin-top: 44px">
+      <div class="w a-driftL li nw" style="--d: 1020ms"><span class="step">01</span><span>Sofrito. Lo primero, y lo que más manda.</span></div>
+      <div class="w a-driftL li nw" style="--d: 1220ms"><span class="step">02</span><span>Caldo. El nuestro, hecho aquí.</span></div>
+      <div class="w a-driftL li nw" style="--d: 1420ms"><span class="step">03</span><span>Arroz. A partir de ahí, manda él.</span></div>
+    </div>
+    <div class="w a-body b-l nw" style="--d: 1800ms; margin-top: 38px">Lo haces tú. Nosotros estamos al lado.</div>
   </div>
-  <div class="row" style="margin-top:4px">
-    <span class="w t-l" data-a="blurDown" data-d="0.28">recuerdo</span>
-  </div>
-  <div class="row" style="margin-top:4px">
-    <span class="w t-l" data-a="blurDown" data-d="0.48">de Barcelona</span>
-  </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-l" data-a="blurDown" data-d="0.72">no está en una tienda</span>
-  </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-xl c-dim" data-a="driftL" data-d="1.05" data-t="0.65">de souvenirs.</span>
-  </div>
-  <div style="height:52px"></div>
-  <span class="w t-xs" data-a="blurUp" data-d="1.65">Reserva un taller con nosotros →</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC11 · Sala de reuniones — TEAM BUILDING
-  Words rise up from below
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc11">
-  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:30px">TEAM BUILDING</span>
-  <div class="row">
-    <span class="w t-xl" data-a="riseUp" data-d="0.14">Hay cosas</span>
+  <!-- 11 · Dos horas y media -->
+  <div class="sc bur ing-w">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rsm" src="assets/arroz.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Taller de paella</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l nw" style="--d: 560ms; margin-top: 30px; font-size: 120px">En dos horas <span class="accent inl">y media</span></div>
+    <div class="w a-type t-m dim nw" style="--d: 960ms; margin-top: 16px">haces una paella de verdad.</div>
+    <div class="w a-driftL t-s" style="--d: 1320ms; margin-top: 18px">Y te la comes.</div>
+    <div class="enum b-l nw" style="margin-top: 42px; font-size: 40px"><span class="wi" style="--d: 1740ms">Con cava de bienvenida,</span> <span class="wi" style="--d: 1890ms">pan,</span> <span class="wi" style="--d: 2040ms">crema catalana</span> <span class="wi" style="--d: 2190ms">y bebida incluida.</span></div>
   </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-xl" data-a="riseUp" data-d="0.40">que no pasan</span>
-  </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-xl c-rd" data-a="riseUp" data-d="0.66">en una sala</span>
-  </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-xl c-rd" data-a="riseUp" data-d="0.88">de reuniones.</span>
-  </div>
-  <div style="height:46px"></div>
-  <span class="w m-l" data-a="blurUp" data-d="1.42">Team building con paella para grupos de 6 a 25 personas.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC12 · Tres formatos — cada uno entra desde un lado diferente
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc12">
-  <span class="wb d-xl" data-a="driftL" data-d="0.08" data-t="0.72">TEAM FLOW</span>
-  <span class="wb d-xl c-rd" data-a="driftR" data-d="0.40" data-t="0.72">PAELLA CHALLENGE</span>
-  <span class="wb d-xl c-mdim" data-a="driftL" data-d="0.72" data-t="0.72">EXPERIENCE DINNER</span>
-  <div style="height:44px"></div>
-  <span class="w m-l" data-a="blurUp" data-d="1.18">Un equipo que recuerda haber hecho algo juntos de verdad.</span>
-</div>
+  <!-- 12 · Horario del taller -->
+  <div class="sc ctr crm">
+    <div class="ring ring-b"></div>
+    <img class="ing s-llow" src="assets/calamar.png" alt="" style="--d: 400ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Horario · Taller</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type d-xl" style="--d: 580ms; margin-top: 34px">MIÉ — DOM</div>
+    <div class="w a-scale" style="--d: 980ms; margin-top: 14px">
+      <span class="d-xxl inl">18</span>
+      <span class="d-xxl inl dim" style="margin: 0 18px">·</span>
+      <span class="d-xxl inl">20</span>
+      <span class="d-xxl inl dim" style="margin: 0 18px">·</span>
+      <span class="d-xxl inl">22H</span>
+    </div>
+    <div class="w a-body b-l" style="--d: 1560ms; margin-top: 40px">En español y en inglés</div>
+    <div class="w a-body url dim" style="--d: 1860ms; margin-top: 26px">ricetomeetyou.fun</div>
+  </div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC13 · Tu equipo merece algo mejor — centered
-═══════════════════════════════════════════════════ -->
-<div class="sc lc" id="sc13">
-  <div class="row" style="justify-content:center">
-    <span class="w t-xl" data-a="blurUp" data-d="0.08">Tu equipo</span>
+  <!-- 13 · Taller a las 13 h -->
+  <div class="sc bur ing-w">
+    <div class="ring ring-a"></div>
+    <img class="ing s-rsm" src="assets/pimiento.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Nuevo horario · Taller</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type d-xl" style="--d: 580ms; margin-top: 28px">TAMBIÉN</div>
+    <div class="w a-type d-xxl accent" style="--d: 900ms">A LAS 13 H.</div>
+    <div class="w a-body b-l" style="--d: 1420ms; margin-top: 40px">Taller de paella al mediodía, de miércoles a domingo.</div>
+    <div class="li" style="margin-top: 18px"><span class="wi" style="--d: 1700ms">69 €</span><span class="wi bullet" style="--d: 1800ms">·</span><span class="wi" style="--d: 1900ms">2,5 h</span><span class="wi bullet" style="--d: 2000ms">·</span><span class="wi" style="--d: 2100ms">12 personas</span></div>
+    <div class="w a-body url dim" style="--d: 2020ms; margin-top: 26px">ricetomeetyou.fun</div>
   </div>
-  <div class="row" style="justify-content:center; margin-top:8px">
-    <span class="w t-xl" data-a="blurUp" data-d="0.34">merece</span>
-    <span class="w t-xl c-rd" data-a="blurUp" data-d="0.56">algo mejor.</span>
-  </div>
-  <div class="row" style="justify-content:center; margin-top:14px">
-    <span class="w t-s c-dim" data-a="driftL" data-d="0.90">Que una cena en un restaurante cualquiera.</span>
-  </div>
-  <div style="height:56px"></div>
-  <span class="w d-l c-cr" data-a="trackIn" data-d="1.40" data-t="1.0">RICE TO MEET YOU</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC14 · La paella no se come sola — BG CREAM
-  Dark text, warm and slow
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc14">
-  <div class="vbar w c-dk" data-a="riseUp" data-d="0.06" data-t="0.5"
-       id="v14bar" style="height:0; background:var(--dk)"></div>
-  <span class="w m-s c-ddim" data-a="fadeIn" data-d="0.08" style="margin-bottom:30px">RICE TO MEET YOU</span>
-  <div class="row">
-    <span class="w t-xl c-dk" data-a="blurIn" data-d="0.20" data-t="1.0">La paella</span>
+  <!-- 14 · Idiomas y grupos privados -->
+  <div class="sc crm ing-w">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rsm" src="assets/cebolla.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Taller</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l nw" style="--d: 560ms; margin-top: 30px">En español</div>
+    <div class="w a-type t-l accent nw" style="--d: 900ms">y en inglés.</div>
+    <div class="w a-driftL t-s dim nw" style="--d: 1300ms; margin-top: 24px">Grupos privados hasta 25 personas.</div>
+    <div class="enum b-l nw" style="margin-top: 42px; font-size: 40px"><span class="wi" style="--d: 1720ms">Cumpleaños,</span> <span class="wi" style="--d: 1870ms">aniversarios,</span> <span class="wi" style="--d: 2020ms">equipos,</span> <span class="wi" style="--d: 2170ms">familias que no se ven nunca.</span></div>
   </div>
-  <div class="row" style="margin-top:6px">
-    <span class="w t-xl c-dk" data-a="blurIn" data-d="0.65" data-t="1.0">no se come sola.</span>
-  </div>
-  <div class="row" style="margin-top:8px">
-    <span class="w t-m c-ddim" data-a="blurIn" data-d="1.08" data-t="1.0">Nunca fue para uno.</span>
-  </div>
-  <div style="height:44px"></div>
-  <span class="w m-l c-dsub" data-a="fadeIn" data-d="1.60">RTMY es el sitio donde pasan cosas entre personas.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC15 · Lo mejor no es el plato — BG RED, MÍNIMO
-  Two phrases. First small, then the second massive.
-═══════════════════════════════════════════════════ -->
-<div class="sc" id="sc15" style="display:flex; flex-direction:column; justify-content:center; padding:0 110px">
-  <div class="row">
-    <span class="w t-s c-mdim" data-a="blurUp" data-d="0.10">Lo mejor no es el plato.</span>
+  <!-- 15 · QR de reserva -->
+  <div class="sc ctr bur">
+    <div class="ring ring-b"></div>
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Reserva</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-xl" style="--d: 580ms; margin-top: 24px">Reserva tu sitio.</div>
+    <img class="w a-scale qr-code" src="assets/qr-reserva.png" alt="Código QR para reservar el taller de paella en ricetomeetyou.fun" style="--d: 1000ms; margin-top: 36px">
+    <div class="w a-body b-l" style="--d: 1520ms; margin-top: 34px">Doce personas por sesión. Cuando se llena, se llena.</div>
+    <div class="w a-body url dim" style="--d: 1820ms; margin-top: 22px">ricetomeetyou.fun</div>
   </div>
-  <div style="height:28px"></div>
-  <div class="row">
-    <span class="w t-xl" data-a="slam" data-d="0.75" data-t="0.68">Es lo que pasa</span>
-  </div>
-  <div class="row" style="margin-top:8px">
-    <span class="w t-l" data-a="slam" data-d="1.05" data-t="0.68">mientras lo hacéis.</span>
-  </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC16 · De 13 a 23, sin parar — RESTAURANTE
-  Bebas display + Outfit body
-═══════════════════════════════════════════════════ -->
-<div class="sc ll" id="sc16">
-  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:28px">RESTAURANTE</span>
-  <div class="row">
-    <span class="w d-xl c-cr" data-a="wipeR" data-d="0.15" data-t="0.65">DE 13 A 23,</span>
+  <!-- 16 · El mejor recuerdo -->
+  <div class="sc crm ing-r">
+    <div class="ring ring-d"></div>
+    <img class="ing s-rmid" src="assets/azafran.png" alt="" style="--d: 400ms">
+    <div class="w a-type t-l" style="--d: 120ms">El mejor</div>
+    <div class="w a-type t-l" style="--d: 420ms">recuerdo</div>
+    <div class="w a-type t-l" style="--d: 720ms">de Barcelona</div>
+    <div class="w a-type t-m dim" style="--d: 1080ms; margin-top: 16px">no está en una tienda</div>
+    <div class="w a-type t-xl accent" style="--d: 1400ms">de souvenirs.</div>
+    <div class="w rule" style="--d: 1800ms"></div>
+    <div class="w a-body b-l" style="--d: 2000ms; margin-top: 30px">Reserva un taller con nosotros →</div>
   </div>
-  <div class="row" style="margin-top:4px">
-    <span class="w d-xl c-rd" data-a="wipeR" data-d="0.55" data-t="0.65">SIN PARAR.</span>
-  </div>
-  <div style="height:38px"></div>
-  <span class="w m-l" data-a="driftL" data-d="1.00">Para el vermut, para comer, para las tapas de las seis,</span>
-  <span class="w m-l c-mdim" data-a="driftL" data-d="1.20" style="margin-top:8px">para la copa de después.</span>
-  <div style="height:24px"></div>
-  <span class="w m-m c-dim" data-a="fadeIn" data-d="1.55">RTMY está abierto cuando tú decides que empieza el plan.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC17 · Más de 200 reseñas — social proof
-  "200" aparece dígito a dígito, luego estrellas
-═══════════════════════════════════════════════════ -->
-<div class="sc lc" id="sc17">
-  <span class="w m-s" data-a="fadeIn" data-d="0.05" style="margin-bottom:16px">GOOGLE REVIEWS</span>
-  <div class="row" style="justify-content:center; gap:0 4px">
-    <span class="w d-xxl c-rd" data-a="slam" data-d="0.15" data-t="0.55">2</span>
-    <span class="w d-xxl c-rd" data-a="slam" data-d="0.38" data-t="0.55">0</span>
-    <span class="w d-xxl c-rd" data-a="slam" data-d="0.61" data-t="0.55">0</span>
-    <span class="w d-xxl c-rd" data-a="slamS" data-d="0.88" data-t="0.50">+</span>
+  <!-- 17 · Vale regalo -->
+  <div class="sc bur ing-r">
+    <div class="ring ring-a"></div>
+    <img class="ing s-rmid s-tall" src="assets/vino.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Vale regalo</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-xl" style="--d: 560ms; margin-top: 30px">Regala</div>
+    <div class="w a-type t-xl accent" style="--d: 920ms">un taller.</div>
+    <div class="li" style="margin-top: 26px"><span class="wi" style="--d: 1320ms">69 €</span><span class="wi bullet" style="--d: 1420ms">·</span><span class="wi" style="--d: 1520ms">2,5 h</span><span class="wi bullet" style="--d: 1620ms">·</span><span class="wi" style="--d: 1720ms">cada uno con su paella</span></div>
+    <div class="w a-body b-l" style="--d: 1700ms; margin-top: 36px">Mejor que otra cosa que no van a usar.</div>
   </div>
-  <div style="height:12px"></div>
-  <span class="w" data-a="blurIn" data-d="1.10" data-t="0.8"
-        style="font-size:80px; letter-spacing:14px; color:var(--rd)">★★★★★</span>
-  <div style="height:28px"></div>
-  <span class="w m-l" data-a="blurUp" data-d="1.50">reseñas de 5 estrellas en Google.</span>
-  <span class="w t-s c-mdim" data-a="blurUp" data-d="1.80" style="margin-top:12px">Lo dicen ellos, no nosotros.</span>
-</div>
 
-<!-- ═══════════════════════════════════════════════════
-  SC18 · FINAL — cierre elegante
-  Cada frase aparece sola, con pausa. URL al final.
-═══════════════════════════════════════════════════ -->
-<div class="sc lc" id="sc18">
-  <div class="row" style="justify-content:center">
-    <span class="w t-xl" data-a="blurIn" data-d="0.10" data-t="1.20">Vuelve pronto.</span>
+  <!-- 18 · Sala de reuniones -->
+  <div class="sc crm ing-w">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rsm" src="assets/ajo.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Team building</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l" style="--d: 560ms; margin-top: 28px">Hay cosas</div>
+    <div class="w a-type t-l" style="--d: 840ms">que no pasan</div>
+    <div class="w a-type t-l accent" style="--d: 1120ms">en una sala</div>
+    <div class="w a-type t-l accent" style="--d: 1360ms">de reuniones.</div>
+    <div class="w a-body b-l nw" style="--d: 1820ms; margin-top: 42px">Team building con paella para grupos de 6 a 25 personas.</div>
   </div>
-  <div class="row" style="justify-content:center; margin-top:10px">
-    <span class="w t-xl c-rd" data-a="blurIn" data-d="0.70" data-t="1.20">Trae a alguien.</span>
-  </div>
-  <div class="row" style="justify-content:center; margin-top:10px">
-    <span class="w t-xl c-dim" data-a="blurIn" data-d="1.30" data-t="1.20">Cuéntaselo.</span>
-  </div>
-  <div style="height:62px"></div>
-  <span class="w m-url" data-a="trackIn" data-d="2.10" data-t="1.0">ricetomeetyou.fun</span>
-  <span class="w m-s" data-a="fadeIn" data-d="2.60" style="margin-top:16px">Carrer de la Lleialtat 16, Barcelona</span>
-</div>
 
-</div><!-- /stage -->
+  <!-- 19 · Tres formatos -->
+  <div class="sc bur ing-w">
+    <div class="ring ring-d"></div>
+    <img class="ing s-rsm" src="assets/fumet-caldo.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Tres formatos</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type fmt" style="--d: 580ms; margin-top: 30px">
+      <span class="fmt-bar" style="background: var(--rtmy-white)"></span>
+      <span class="d-xl" style="color: var(--rtmy-white)">TEAM FLOW</span>
+    </div>
+    <div class="w a-type fmt" style="--d: 900ms">
+      <span class="fmt-bar" style="background: var(--rtmy-cream-200)"></span>
+      <span class="d-xl" style="color: var(--rtmy-cream-200)">PAELLA CHALLENGE</span>
+    </div>
+    <div class="w a-type fmt" style="--d: 1220ms">
+      <span class="fmt-bar" style="background: var(--rtmy-white-veil-65)"></span>
+      <span class="d-xl" style="color: var(--rtmy-white-veil-65)">EXPERIENCE DINNER</span>
+    </div>
+    <div class="w a-body b-l nw" style="--d: 1700ms; margin-top: 44px">Un equipo que recuerda haber hecho algo juntos de verdad.</div>
+  </div>
+
+  <!-- 20 · Tu equipo merece algo mejor -->
+  <div class="sc ctr crm">
+    <div class="ring ring-b"></div>
+    <img class="ing s-llow" src="assets/calamar.png" alt="" style="--d: 400ms">
+    <div class="w a-type t-l" style="--d: 120ms">Tu equipo</div>
+    <div class="w a-type t-l" style="--d: 500ms">merece <span class="accent inl">algo mejor.</span></div>
+    <div class="w a-driftL t-s dim" style="--d: 940ms; margin-top: 22px">Que una cena en un restaurante cualquiera.</div>
+    <div class="w rule" style="--d: 1340ms"></div>
+    <div class="w a-fade d-l accent" style="--d: 1580ms; margin-top: 34px">RICE TO MEET YOU</div>
+  </div>
+
+  <!-- 21 · Manifiesto — dinámicas forzadas -->
+  <div class="sc bur ing-w">
+    <div class="ring ring-a"></div>
+    <img class="ing s-rsm" src="assets/pimiento.png" alt="" style="--d: 500ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 100ms">Team building</div>
+    <div class="w rule" style="--d: 340ms"></div>
+    <div class="w a-type t-xl" style="--d: 680ms; margin-top: 44px">Aquí no hay</div>
+    <div class="w a-type t-xl" style="--d: 1020ms">dinámicas</div>
+    <div class="w a-type t-xl accent" style="--d: 1360ms">forzadas.</div>
+  </div>
+
+  <!-- 22 · Manifiesto — lo mejor no es el plato -->
+  <div class="sc bur ing-w">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rsm" src="assets/arroz.png" alt="" style="--d: 500ms">
+    <div class="w a-body b-l dim" style="--d: 140ms">Lo mejor no es el plato.</div>
+    <div class="w rule" style="--d: 440ms"></div>
+    <div class="w a-type t-xl" style="--d: 800ms; margin-top: 34px">Es lo que pasa</div>
+    <div class="w a-type t-l accent" style="--d: 1180ms">mientras lo hacéis.</div>
+  </div>
+
+  <!-- 23 · La paella no se come sola -->
+  <div class="sc crm ing-r">
+    <div class="ring ring-d"></div>
+    <img class="ing s-rmid" src="assets/aceite.png" alt="" style="--d: 400ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Rice to Meet You</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type t-l" style="--d: 580ms; margin-top: 28px">La paella</div>
+    <div class="w a-type t-l accent" style="--d: 940ms">no se come sola.</div>
+    <div class="w a-driftL t-m dim" style="--d: 1320ms; margin-top: 18px">Nunca fue para uno.</div>
+    <div class="w a-body b-l" style="--d: 1780ms; margin-top: 44px">RTMY es el sitio donde pasan cosas entre personas.</div>
+  </div>
+
+  <!-- 24 · Restaurante 13–23 -->
+  <div class="sc bur ing-r">
+    <div class="ring ring-a"></div>
+    <img class="ing s-rmid s-tall" src="assets/vino.png" alt="" style="--d: 300ms">
+    <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Restaurante</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-type d-xl" style="--d: 580ms; margin-top: 28px">DE 13 A 23,</div>
+    <div class="w a-type d-xl accent" style="--d: 900ms">SIN PARAR.</div>
+    <div class="enum b-l nw" style="margin-top: 42px"><span class="wi" style="--d: 1320ms">Para el vermut,</span> <span class="wi" style="--d: 1470ms">para comer,</span> <span class="wi" style="--d: 1620ms">para las tapas de las seis,</span></div>
+    <div class="enum b-l dim" style="margin-top: 10px"><span class="wi" style="--d: 1790ms">para la copa de después.</span></div>
+    <div class="w a-body b dim" style="--d: 1920ms; margin-top: 26px">RTMY está abierto cuando tú decides que empieza el plan.</div>
+  </div>
+
+  <!-- 25 · Reseñas -->
+  <div class="sc ctr crm">
+    <div class="ring ring-b"></div>
+    <img class="ing s-llow" src="assets/ajo.png" alt="" style="--d: 500ms">
+    <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Google Reviews</div>
+    <div class="w rule" style="--d: 300ms"></div>
+    <div class="w a-fade d-xxl accent" style="--d: 580ms; margin-top: 26px"><span id="rev">0</span></div>
+    <div class="w a-fade stars accent" style="--d: 1600ms; margin-top: 10px" role="img" aria-label="Cinco estrellas">★★★★★</div>
+    <div class="w a-body b-l" style="--d: 1980ms; margin-top: 34px">reseñas de 5 estrellas en Google.</div>
+    <div class="w a-body b dim" style="--d: 2240ms; margin-top: 14px">Lo dicen ellos, no nosotros.</div>
+  </div>
+
+  <!-- 26 · Final -->
+  <div class="sc ctr bur">
+    <div class="ring ring-c"></div>
+    <img class="ing s-rctr" src="assets/salmorreta.png" alt="" style="--d: 400ms">
+    <div class="w a-type t-l" style="--d: 140ms">Vuelve pronto.</div>
+    <div class="w a-type t-l accent" style="--d: 700ms; margin-top: 8px">Trae a alguien.</div>
+    <div class="w a-type t-l dim" style="--d: 1260ms; margin-top: 8px">Cuéntaselo.</div>
+    <div class="w rule" style="--d: 1700ms"></div>
+    <div class="w a-body url" style="--d: 1940ms; margin-top: 34px">ricetomeetyou.fun</div>
+    <div class="w a-body b dim" style="--d: 2240ms; margin-top: 18px">Carrer de la Lleialtat 16, Barcelona</div>
+  </div>
+
+  <!-- Banda inferior -->
+  <div class="band" id="band">
+    <span>Taller de paella</span><span class="sep">·</span>
+    <span>Team building</span><span class="sep">·</span>
+    <span>Restaurante</span><span class="sep">·</span>
+    <span>El Raval</span>
+  </div>
+
+</div></div>
 
 <script>
-const $   = id => document.getElementById(id);
-const dly = ms => new Promise(r => setTimeout(r, ms));
-const all = document.querySelectorAll('.sc');
-const bgEl = $('bg');
-const flEl = $('flash');
+(function () {
+  'use strict';
 
-/* ── SCENE BACKGROUNDS ── */
-const BG = {
-  sc01:'#0D0D0C', sc02:'#A81C1F', sc03:'#0D0D0C',
-  sc04:'#0D0D0C', sc05:'#EDE8DC', sc06:'#0D0D0C',
-  sc07:'#A81C1F', sc08:'#0D0D0C', sc09:'#0D0D0C',
-  sc10:'#A81C1F', sc11:'#0D0D0C', sc12:'#0D0D0C',
-  sc13:'#0D0D0C', sc14:'#EDE8DC', sc15:'#A81C1F',
-  sc16:'#0D0D0C', sc17:'#0D0D0C', sc18:'#0D0D0C',
-};
+  /* Duraciones en segundos, una por escena, en el orden del DOM.
+     ~4:06 en total a velocidad 1. */
+  var DUR = [7.5, 10, 11, 10.5, 9.5, 8.5, 9, 10, 9.5, 10.5, 10, 9, 9.5, 9,
+             9.5, 9.5, 9, 9.5, 9.5, 9, 8.5, 8.5, 9.5, 10, 10, 10];
+  /* Fondo de cada escena, para teñir la banda sin romper el contraste. */
+  var GROUND = ['bur','crm','bur','crm','bur','crm','bur','crm','bur','crm',
+                'bur','crm','bur','crm','bur','crm','bur','crm','bur','crm',
+                'bur','bur','crm','bur','crm','bur'];
+  var REVIEW_SCENE = 24;          /* índice 0-based de la escena de reseñas */
+  var STORE_KEY = 'rtmy-tv-pos';  /* posición de reproducción */
 
-/* ── SC02 CAROUSEL ── */
-let sc02Timer = null, sc02Idx = 0;
-function startCarousel() {
-  const items = document.querySelectorAll('#sc02-carousel .sc02-item');
-  if (!items.length) return;
-  sc02Idx = 0;
-  items.forEach(el => el.classList.remove('active'));
-  setTimeout(() => {
-    items[0].classList.add('active');
-    sc02Timer = setInterval(() => {
-      items[sc02Idx].classList.remove('active');
-      sc02Idx = (sc02Idx + 1) % items.length;
-      items[sc02Idx].classList.add('active');
-    }, 950);
-  }, 1350);
-}
-function stopCarousel() {
-  if (sc02Timer) { clearInterval(sc02Timer); sc02Timer = null; }
-  document.querySelectorAll('#sc02-carousel .sc02-item').forEach(el => el.classList.remove('active'));
-}
+  var P = new URLSearchParams(location.search);
+  var SPEED = parseFloat(P.get('speed'));
+  if (!isFinite(SPEED) || SPEED <= 0) SPEED = 1;
+  SPEED = Math.min(3, Math.max(0.4, SPEED));
+  var SHOW_BAND = P.get('band') !== '0';
+  var REVIEWS = parseInt(P.get('reviews'), 10);
+  if (!isFinite(REVIEWS) || REVIEWS < 0) REVIEWS = 500;
 
-/* ── HELPERS ── */
-function setBg(c) { bgEl.style.background = c; }
+  var stage = document.getElementById('stage');
+  var band  = document.getElementById('band');
+  var revEl = document.getElementById('rev');
+  var scenes = Array.prototype.slice.call(stage.querySelectorAll('.sc'));
 
-async function doFlash(ms = 65) {
-  flEl.style.transition = 'none'; flEl.style.opacity = '1';
-  await dly(ms);
-  flEl.style.transition = 'opacity 0.32s ease'; flEl.style.opacity = '0';
-}
+  stage.style.setProperty('--spd', String(1 / SPEED));
+  if (!SHOW_BAND) band.classList.add('is-off');
 
-function show(id) {
-  all.forEach(s => { s.style.transition = 'none'; s.style.opacity = '0'; });
-  $(id).style.opacity = '1';
-}
+  /* Escalar 1920×1080 a lo que dé la pantalla, sin deformar. */
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.setProperty('--fit', String(s));
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(document.documentElement);
+  fit();
 
-async function fadeOut(id, ms = 450) {
-  const el = $(id);
-  el.style.transition = `opacity ${ms}ms ease`;
-  el.style.opacity = '0';
-  await dly(ms);
-}
+  /* Retomar donde se quedó tras un corte de luz o un refresco. */
+  var i = 0;
+  try {
+    var raw = window.localStorage.getItem(STORE_KEY);
+    if (raw !== null) {
+      var n = parseInt(raw, 10);
+      if (!isNaN(n) && n >= 0 && n < scenes.length) i = n;
+    }
+  } catch (e) { /* sin almacenamiento: empieza por el principio */ }
 
-/* ── CORE: PLAY ANIMATIONS IN A SCENE ── */
-function playAnims(sceneId) {
-  const els = document.querySelectorAll(`#${sceneId} .w, #${sceneId} .wb`);
-  els.forEach(el => {
-    const S = 1.8; /* global animation speed scale — increase to slow all animations */
-    const a = el.dataset.a || 'blurUp';
-    const d = parseFloat(el.dataset.d || '0') * S;
-    const t = parseFloat(el.dataset.t || '0.82') * S;
-    /* restart trick */
-    el.style.animation = 'none';
-    el.style.opacity   = '0';
-    void el.offsetWidth; /* force reflow */
-    el.style.animation = `${a} ${t}s cubic-bezier(0.16,1,0.3,1) ${d}s both`;
-  });
-}
+  var raf = null;
 
-/* ── SC04 vbar special case ── */
-function animVbar(id, delay) {
-  const el = $(id);
-  if (!el) return;
-  el.style.animation = 'none';
-  el.style.height    = '0';
-  void el.offsetWidth;
-  setTimeout(() => {
-    el.style.transition = 'height 0.55s cubic-bezier(0.16,1,0.3,1)';
-    el.style.height = '1080px';
-  }, delay);
-}
-
-/* ── UNIVERSAL SCENE RUNNER ── */
-async function runScene(id, holdMs, exitType = 'fade') {
-  setBg(BG[id]);
-  show(id);
-
-  /* Handle vbars */
-  if (id === 'sc04') animVbar('v04bar', 100);
-  if (id === 'sc14') animVbar('v14bar', 100);
-  if (id === 'sc02') startCarousel();
-
-  playAnims(id);
-  await dly(holdMs);
-
-  if (exitType === 'fade') {
-    await fadeOut(id, 450);
-  } else if (exitType === 'flash') {
-    $(id).style.transition = 'none'; $(id).style.opacity = '0';
-    await doFlash(65);
-    await dly(80);
-  } else if (exitType === 'cut') {
-    $(id).style.transition = 'none'; $(id).style.opacity = '0';
-    await dly(80);
+  /* Conteo suave del número de reseñas: ease-out, sin rebote. */
+  function countUp() {
+    var t0 = null, dur = 2600 * SPEED;
+    if (raf) cancelAnimationFrame(raf);
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur);
+      revEl.textContent = String(Math.round(REVIEWS * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
   }
 
-  /* Reset all animation states */
-  document.querySelectorAll(`#${id} .w, #${id} .wb`).forEach(el => {
-    el.style.animation = 'none';
-    el.style.opacity   = '0';
-  });
-  if (id === 'sc04' && $('v04bar')) { $('v04bar').style.transition='none'; $('v04bar').style.height='0'; }
-  if (id === 'sc14' && $('v14bar')) { $('v14bar').style.transition='none'; $('v14bar').style.height='0'; }
-  if (id === 'sc02') stopCarousel();
-}
-
-/* ── MAIN LOOP ── */
-async function run() {
-  while (true) {
-    await runScene('sc01', 7700);        // El arroz no espera
-    await runScene('sc02', 11000);       // Las tapas — carousel
-    await runScene('sc03', 9100);        // La tortilla
-    await runScene('sc04', 7500);        // Arroz Albufera D.O.
-    await runScene('sc05', 7100);        // Crema catalana
-    await runScene('sc06', 8000, 'flash'); // ¿Cuándo fue la última vez?
-    await runScene('sc07', 7700);        // No hace falta — RED
-    await runScene('sc08', 7900);        // En dos horas y media
-    await runScene('sc09', 8000, 'flash'); // Horario
-    await runScene('sc10', 7500);        // El mejor recuerdo — RED
-    await runScene('sc11', 8300, 'cut');  // Sala de reuniones
-    await runScene('sc12', 8000);        // Tres formatos
-    await runScene('sc13', 7300);        // Tu equipo merece
-    await runScene('sc14', 7700);        // La paella no se come sola — CREAM
-    await runScene('sc15', 7300, 'flash'); // Lo mejor no es el plato — RED
-    await runScene('sc16', 8000);        // De 13 a 23
-    await runScene('sc17', 7500);        // 200 reseñas
-    await runScene('sc18', 8500);        // Final
-    await dly(200);
+  function show(k) {
+    for (var j = 0; j < scenes.length; j++) scenes[j].classList.remove('on');
+    scenes[k].classList.add('on');
+    band.classList.remove('on-bur', 'on-crm');
+    band.classList.add(GROUND[k] === 'bur' ? 'on-bur' : 'on-crm');
+    if (k === REVIEW_SCENE) countUp();
+    else revEl.textContent = '0';
   }
-}
 
-/* ── INIT ── */
-all.forEach(s => s.style.opacity = '0');
-window.addEventListener('load', run);
+  function tick() {
+    show(i);
+    setTimeout(function () {
+      i = (i + 1) % scenes.length;
+      try { window.localStorage.setItem(STORE_KEY, String(i)); } catch (e) {}
+      tick();
+    }, DUR[i] * 1000 / SPEED);
+  }
+
+  /* Arrancar con las fuentes ya cargadas, para que el primer titular
+     no entre con la métrica equivocada. */
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(tick, tick);
+  } else {
+    window.addEventListener('load', tick);
+  }
+})();
 </script>
 </body>
 </html>
