@@ -15,7 +15,7 @@
    Parámetros por URL:
      ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~3:16)
      ?band=0       oculta la banda inferior
-     ?reviews=500  cifra de reseñas del conteo
+     ?reviews=512  fija la cifra de reseñas a mano (si no, sale de reviews.json)
 
    Tokens, tipografía y motivos vienen del design system de RTMY.
    Burdeos #741C1C es el único color de marca. Sin negro, sin blanco
@@ -664,8 +664,25 @@ html, body {
   if (!isFinite(SPEED) || SPEED <= 0) SPEED = 1;
   SPEED = Math.min(3, Math.max(0.4, SPEED));
   var SHOW_BAND = P.get('band') !== '0';
+  /* Cifra de reseñas. Por orden de prioridad:
+       1. ?reviews= en la URL, si la pones a mano;
+       2. reviews.json, que actualiza sola la acción nocturna del repo;
+       3. este número de respaldo, por si el JSON no estuviera.
+     El JSON se sirve desde el mismo sitio que esta página, así que si la
+     página ha cargado, el JSON carga. La TV nunca llama a Google. */
   var REVIEWS = parseInt(P.get('reviews'), 10);
-  if (!isFinite(REVIEWS) || REVIEWS < 0) REVIEWS = 500;
+  var REVIEWS_FIJADO = isFinite(REVIEWS) && REVIEWS >= 0;
+  if (!REVIEWS_FIJADO) REVIEWS = 512;
+
+  if (!REVIEWS_FIJADO) {
+    fetch('reviews.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        var n = d && Math.round(Number(d.count));
+        if (isFinite(n) && n > 0 && n < 100000) REVIEWS = n;
+      })
+      .catch(function () { /* sin red: se queda el número de respaldo */ });
+  }
 
   var stage = document.getElementById('stage');
   var band  = document.getElementById('band');

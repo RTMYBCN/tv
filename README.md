@@ -22,7 +22,7 @@ guarda la posición en `localStorage`.
 |---|---|---|
 | `?speed=1.35` | Velocidad global, de 0,4 a 3. A 1,35 el bucle dura ~3:16 | `1` |
 | `?band=0` | Oculta la banda inferior | banda visible |
-| `?reviews=500` | Cifra del conteo de reseñas de Google | `500` |
+| `?reviews=512` | Fija la cifra de reseñas a mano | sale de `reviews.json` |
 
 Se pueden combinar: `index.html?speed=1.35&band=0`
 
@@ -30,6 +30,30 @@ Se pueden combinar: `index.html?speed=1.35&band=0`
 
 - `index.html` — el bucle entero.
 - `assets/` — las ilustraciones de ingrediente, el sello de marca y el QR.
+- `reviews.json` — la cifra de reseñas. **No hace falta tocarlo a mano.**
+
+## La cifra de reseñas se actualiza sola
+
+Cada noche, a las 05:00 UTC, la acción `.github/workflows/actualizar-resenas.yml`
+le pide la cifra al mismo Apps Script que alimenta el contador de
+`ricetomeetyou.fun`, y la escribe en `reviews.json`. Como la TV carga esta
+página desde GitHub Pages cada día, se encuentra el número ya hecho: **la
+pantalla no llama nunca a Google**, así que no hereda las esperas ni los
+fallos pasajeros de ese endpoint.
+
+Si el endpoint no responde o devuelve algo raro, la acción **no toca nada** y
+se queda la última cifra buena. Si además faltara `reviews.json`, el
+`index.html` lleva un número de respaldo escrito dentro.
+
+Dos cosas de las que depende, por si algún día deja de actualizarse:
+
+- En **Settings → Actions → General → Workflow permissions** el repo tiene que
+  estar en *Read and write permissions*; si no, la acción no puede guardar el
+  cambio.
+- GitHub **desactiva las acciones programadas tras 60 días sin actividad** en
+  el repo. Si pasa, sale un aviso y se reactivan con un clic.
+
+Para forzarla a mano: pestaña **Actions → Actualizar reseñas → Run workflow**.
 
 `taller-paella.html` y `tv.html` son otras páginas que ya estaban en el repo
 y no tienen que ver con este bucle.

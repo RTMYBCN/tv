@@ -1,0 +1,79 @@
+name: Actualizar reseñas
+
+# Pide cada noche la cifra de reseñas al Apps Script que ya alimenta la web
+# y la escribe en reviews.json. La TV, que carga esta página cada día desde
+# GitHub Pages, se encuentra el número ya hecho y no llama a Google nunca.
+
+on:
+  schedule:
+    # 05:00 UTC = 06:00 en invierno y 07:00 en verano, hora de Madrid.
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pedir la cifra a Apps Script
+        id: pedir
+        env:
+          ENDPOINT: https://script.google.com/macros/s/AKfycbwiE27Jm6V_QQbGa1bax7QpAlBHxkvAw3G0OwV-TxP--AYkDlrmoHunXrEkfSnvOBQR/exec
+        run: |
+          set -uo pipefail
+          ANTERIOR=$(jq -r '.count' reviews.json)
+          NUEVO=''
+
+          # El /exec de Apps Script arranca en frío y a veces devuelve un 404
+          # pasajero en el primer intento. Aquí no hay nadie esperando, así
+          # que se reintenta con calma.
+          for i in 1 2 3 4 5; do
+            RESP=$(curl -sL --max-time 90 "$ENDPOINT" || true)
+            if printf '%s' "$RESP" | jq -e '(.count | type) == "number" and (.rating | type) == "number"' >/dev/null 2>&1; then
+              NUEVO=$(printf '%s' "$RESP" | jq -r '.count')
+              RATING=$(printf '%s' "$RESP" | jq -r '.rating')
+              CUANDO=$(printf '%s' "$RESP" | jq -r '.updated // ""')
+              break
+            fi
+            echo "Intento $i sin respuesta válida. Reintento en 30 s."
+            sleep 30
+          done
+
+          if [ -z "$NUEVO" ]; then
+            echo "El endpoint no respondió con datos válidos. reviews.json se queda como estaba."
+            echo "cambiar=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Guarda de cordura: las reseñas no se desploman de un día para otro.
+          # Si la cifra cae o se dispara, es basura y no se toca nada. Este
+          # backend ya devolvió una vez un payload corrupto.
+          if [ "$NUEVO" -lt 1 ] || [ "$NUEVO" -gt 100000 ] || [ "$NUEVO" -lt $((ANTERIOR - 10)) ]; then
+            echo "Cifra sospechosa: $NUEVO frente a $ANTERIOR. No se toca nada."
+            echo "cambiar=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$NUEVO" = "$ANTERIOR" ]; then
+            echo "Sin cambios: sigue en $NUEVO."
+            echo "cambiar=no" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          jq -n --argjson rating "$RATING" --argjson count "$NUEVO" --arg updated "$CUANDO" \
+            '{rating: $rating, count: $count, updated: $updated}' > reviews.json
+          echo "De $ANTERIOR a $NUEVO reseñas."
+          echo "cambiar=si" >> "$GITHUB_OUTPUT"
+
+      - name: Guardar el cambio
+        if: steps.pedir.outputs.cambiar == 'si'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add reviews.json
+          git commit -m 'Actualiza la cifra de reseñas'
+          git push
