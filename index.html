@@ -10,10 +10,10 @@
 <style>
 /* ═══════════════════════════════════════════════════════════
    Rice to Meet You — bucle para la TV del local
-   26 escenas, ~4:06 a velocidad 1. 1920×1080, escalado a pantalla.
+   28 escenas, ~4:24 a velocidad 1. 1920×1080, escalado a pantalla.
 
    Parámetros por URL:
-     ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~3:02)
+     ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~3:16)
      ?band=0       oculta la banda inferior
      ?reviews=500  cifra de reseñas del conteo
 
@@ -170,6 +170,39 @@ html, body {
 /* Tres formatos: tono propio en escala de claridad, con marca delante */
 .fmt { display: flex; align-items: center; gap: 30px; }
 .fmt-bar { width: 72px; height: 12px; flex: none; border-radius: 2px; }
+
+/* ── LOCKUP DE CAMISETA: tipografía cinética ──
+   Los dos estampados de la espalda, en movimiento. Las palabras se
+   montan una sobre otra, cada una entrando dentro de su propia máscara
+   y asentando el tracking. La palabra en contorno es el recurso del
+   propio estampado, no un invento. */
+.lock { font-family: var(--font-display); line-height: 0.84; letter-spacing: 0.02em; }
+.lock-top {
+  font-family: var(--font-body); font-weight: 700; font-size: 72px;
+  line-height: 1.1; letter-spacing: -0.01em;
+}
+.outline { color: transparent; }
+.bur .outline { -webkit-text-stroke: 7px var(--rtmy-white); }
+.crm .outline { -webkit-text-stroke: 7px var(--rtmy-burdeos-800); }
+/* Sin text-stroke, la palabra se quedaría invisible. */
+@supports not ((-webkit-text-stroke: 1px red)) {
+  .bur .outline { color: var(--rtmy-white-veil-35); }
+  .crm .outline { color: var(--rtmy-cream-200); }
+}
+.sc.on .w.a-lock    { animation-name: lockUp;   animation-duration: calc(640ms * var(--spd, 1)); }
+.sc.on .w.a-lock-dn { animation-name: lockDown; animation-duration: calc(640ms * var(--spd, 1)); }
+@keyframes lockUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.94);  letter-spacing: 0.14em; clip-path: inset(100% -6% -14% -6%); }
+  to   { opacity: 1; transform: translateY(0) scale(1);        letter-spacing: 0.02em; clip-path: inset(-14% -6% -14% -6%); }
+}
+@keyframes lockDown {
+  from { opacity: 0; transform: translateY(-40px) scale(0.94); letter-spacing: 0.14em; clip-path: inset(-14% -6% 100% -6%); }
+  to   { opacity: 1; transform: translateY(0) scale(1);        letter-spacing: 0.02em; clip-path: inset(-14% -6% -14% -6%); }
+}
+.lock-url { font-family: var(--font-display); font-size: 72px; letter-spacing: 0.04em; }
+.lock-rule { width: 980px; height: 5px; }
+.bur .lock-rule { background: var(--rtmy-white); }
+.crm .lock-rule { background: var(--rtmy-burdeos-800); }
 
 /* ── CARRUSEL VERTICAL DE TAPAS ── */
 .scroll-win { height: 430px; overflow: hidden; margin-top: 38px; }
@@ -374,7 +407,17 @@ html, body {
     <div class="w a-body b-l nw" style="--d: 1800ms; margin-top: 38px">Lo haces tú. Nosotros estamos al lado.</div>
   </div>
 
-  <!-- 11 · Dos horas y media -->
+  <!-- 11 · Camiseta — Haz paella, make friends -->
+  <div class="sc ctr bur">
+    <div class="ring ring-d"></div>
+    <div class="w a-lock lock outline" style="--d: 140ms; font-size: 330px">HAZ</div>
+    <div class="w a-lock lock" style="--d: 460ms; font-size: 330px">PAELLA</div>
+    <div class="w a-lock-dn lock dim" style="--d: 800ms; font-size: 190px">MAKE FRIENDS</div>
+    <div class="w rule lock-rule" style="--d: 1180ms"></div>
+    <div class="w a-body lock-url" style="--d: 1420ms; margin-top: 18px">RICETOMEETYOU.FUN</div>
+  </div>
+
+  <!-- 12 · Dos horas y media -->
   <div class="sc bur ing-w">
     <div class="ring ring-c"></div>
     <img class="ing s-rsm" src="assets/arroz.png" alt="" style="--d: 300ms">
@@ -386,7 +429,7 @@ html, body {
     <div class="enum b-l nw" style="margin-top: 42px; font-size: 40px"><span class="wi" style="--d: 1740ms">Con cava de bienvenida,</span> <span class="wi" style="--d: 1890ms">pan,</span> <span class="wi" style="--d: 2040ms">crema catalana</span> <span class="wi" style="--d: 2190ms">y bebida incluida.</span></div>
   </div>
 
-  <!-- 12 · Horario del taller -->
+  <!-- 13 · Horario del taller -->
   <div class="sc ctr crm">
     <div class="ring ring-b"></div>
     <img class="ing s-llow" src="assets/calamar.png" alt="" style="--d: 400ms">
@@ -404,7 +447,7 @@ html, body {
     <div class="w a-body url dim" style="--d: 1860ms; margin-top: 26px">ricetomeetyou.fun</div>
   </div>
 
-  <!-- 13 · Taller a las 13 h -->
+  <!-- 14 · Taller a las 13 h -->
   <div class="sc bur ing-w">
     <div class="ring ring-a"></div>
     <img class="ing s-rsm" src="assets/pimiento.png" alt="" style="--d: 300ms">
@@ -417,7 +460,7 @@ html, body {
     <div class="w a-body url dim" style="--d: 2020ms; margin-top: 26px">ricetomeetyou.fun</div>
   </div>
 
-  <!-- 14 · Idiomas y grupos privados -->
+  <!-- 15 · Idiomas y grupos privados -->
   <div class="sc crm ing-w">
     <div class="ring ring-c"></div>
     <img class="ing s-rsm" src="assets/cebolla.png" alt="" style="--d: 300ms">
@@ -429,7 +472,7 @@ html, body {
     <div class="enum b-l nw" style="margin-top: 42px; font-size: 40px"><span class="wi" style="--d: 1720ms">Cumpleaños,</span> <span class="wi" style="--d: 1870ms">aniversarios,</span> <span class="wi" style="--d: 2020ms">equipos,</span> <span class="wi" style="--d: 2170ms">familias que no se ven nunca.</span></div>
   </div>
 
-  <!-- 15 · QR de reserva -->
+  <!-- 16 · QR de reserva -->
   <div class="sc ctr bur">
     <div class="ring ring-b"></div>
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Reserva</div>
@@ -440,7 +483,7 @@ html, body {
     <div class="w a-body url dim" style="--d: 1820ms; margin-top: 22px">ricetomeetyou.fun</div>
   </div>
 
-  <!-- 16 · El mejor recuerdo -->
+  <!-- 17 · El mejor recuerdo -->
   <div class="sc crm ing-r">
     <div class="ring ring-d"></div>
     <img class="ing s-rmid" src="assets/azafran.png" alt="" style="--d: 400ms">
@@ -453,7 +496,7 @@ html, body {
     <div class="w a-body b-l" style="--d: 2000ms; margin-top: 30px">Reserva un taller con nosotros →</div>
   </div>
 
-  <!-- 17 · Vale regalo -->
+  <!-- 18 · Vale regalo -->
   <div class="sc bur ing-r">
     <div class="ring ring-a"></div>
     <img class="ing s-rmid s-tall" src="assets/vino.png" alt="" style="--d: 300ms">
@@ -465,7 +508,7 @@ html, body {
     <div class="w a-body b-l" style="--d: 1700ms; margin-top: 36px">Mejor que otra cosa que no van a usar.</div>
   </div>
 
-  <!-- 18 · Sala de reuniones -->
+  <!-- 19 · Sala de reuniones -->
   <div class="sc crm ing-w">
     <div class="ring ring-c"></div>
     <img class="ing s-rsm" src="assets/ajo.png" alt="" style="--d: 300ms">
@@ -478,7 +521,7 @@ html, body {
     <div class="w a-body b-l nw" style="--d: 1820ms; margin-top: 42px">Team building con paella para grupos de 6 a 25 personas.</div>
   </div>
 
-  <!-- 19 · Tres formatos -->
+  <!-- 20 · Tres formatos -->
   <div class="sc bur ing-w">
     <div class="ring ring-d"></div>
     <img class="ing s-rsm" src="assets/fumet-caldo.png" alt="" style="--d: 300ms">
@@ -499,7 +542,7 @@ html, body {
     <div class="w a-body b-l nw" style="--d: 1700ms; margin-top: 44px">Un equipo que recuerda haber hecho algo juntos de verdad.</div>
   </div>
 
-  <!-- 20 · Tu equipo merece algo mejor -->
+  <!-- 21 · Tu equipo merece algo mejor -->
   <div class="sc ctr crm">
     <div class="ring ring-b"></div>
     <img class="ing s-llow" src="assets/calamar.png" alt="" style="--d: 400ms">
@@ -510,7 +553,7 @@ html, body {
     <div class="w a-fade d-l accent" style="--d: 1580ms; margin-top: 34px">RICE TO MEET YOU</div>
   </div>
 
-  <!-- 21 · Manifiesto — dinámicas forzadas -->
+  <!-- 22 · Manifiesto — dinámicas forzadas -->
   <div class="sc bur ing-w">
     <div class="ring ring-a"></div>
     <img class="ing s-rsm" src="assets/pimiento.png" alt="" style="--d: 500ms">
@@ -521,7 +564,18 @@ html, body {
     <div class="w a-type t-xl accent" style="--d: 1360ms">forzadas.</div>
   </div>
 
-  <!-- 22 · Manifiesto — lo mejor no es el plato -->
+  <!-- 23 · Camiseta — La vida, como la paella -->
+  <div class="sc ctr crm">
+    <div class="ring ring-b"></div>
+    <div class="w a-body lock-top accent" style="--d: 120ms">La vida, como la paella.</div>
+    <div class="w a-lock lock accent" style="--d: 520ms; font-size: 250px; margin-top: 18px">MEJOR</div>
+    <div class="w a-lock-dn lock outline" style="--d: 840ms; font-size: 250px">NO</div>
+    <div class="w a-lock lock accent" style="--d: 1160ms; font-size: 250px">REMOVER</div>
+    <div class="w rule lock-rule" style="--d: 1520ms"></div>
+    <div class="w a-body lock-url accent" style="--d: 1760ms; margin-top: 18px">RICETOMEETYOU.FUN</div>
+  </div>
+
+  <!-- 24 · Manifiesto — lo mejor no es el plato -->
   <div class="sc bur ing-w">
     <div class="ring ring-c"></div>
     <img class="ing s-rsm" src="assets/arroz.png" alt="" style="--d: 500ms">
@@ -531,7 +585,7 @@ html, body {
     <div class="w a-type t-l accent" style="--d: 1180ms">mientras lo hacéis.</div>
   </div>
 
-  <!-- 23 · La paella no se come sola -->
+  <!-- 25 · La paella no se come sola -->
   <div class="sc crm ing-r">
     <div class="ring ring-d"></div>
     <img class="ing s-rmid" src="assets/aceite.png" alt="" style="--d: 400ms">
@@ -543,7 +597,7 @@ html, body {
     <div class="w a-body b-l" style="--d: 1780ms; margin-top: 44px">RTMY es el sitio donde pasan cosas entre personas.</div>
   </div>
 
-  <!-- 24 · Restaurante 13–23 -->
+  <!-- 26 · Restaurante 13–23 -->
   <div class="sc bur ing-r">
     <div class="ring ring-a"></div>
     <img class="ing s-rmid s-tall" src="assets/vino.png" alt="" style="--d: 300ms">
@@ -556,7 +610,7 @@ html, body {
     <div class="w a-body b dim" style="--d: 1920ms; margin-top: 26px">RTMY está abierto cuando tú decides que empieza el plan.</div>
   </div>
 
-  <!-- 25 · Reseñas -->
+  <!-- 27 · Reseñas -->
   <div class="sc ctr crm">
     <div class="ring ring-b"></div>
     <img class="ing s-llow" src="assets/ajo.png" alt="" style="--d: 500ms">
@@ -568,7 +622,7 @@ html, body {
     <div class="w a-body b dim" style="--d: 2240ms; margin-top: 14px">Lo dicen ellos, no nosotros.</div>
   </div>
 
-  <!-- 26 · Final -->
+  <!-- 28 · Final -->
   <div class="sc ctr bur">
     <div class="ring ring-c"></div>
     <img class="ing s-rctr" src="assets/salmorreta.png" alt="" style="--d: 400ms">
@@ -595,14 +649,14 @@ html, body {
   'use strict';
 
   /* Duraciones en segundos, una por escena, en el orden del DOM.
-     ~4:06 en total a velocidad 1. */
-  var DUR = [7.5, 10, 11, 10.5, 9.5, 8.5, 9, 10, 9.5, 10.5, 10, 9, 9.5, 9,
-             9.5, 9.5, 9, 9.5, 9.5, 9, 8.5, 8.5, 9.5, 10, 10, 10];
+     ~4:24 en total a velocidad 1. */
+  var DUR = [7.5, 10, 11, 10.5, 9.5, 8.5, 9, 10, 9.5, 10.5, 9, 10, 9, 9.5,
+             9, 9.5, 9.5, 9, 9.5, 9.5, 9, 8.5, 9, 8.5, 9.5, 10, 10, 10];
   /* Fondo de cada escena, para teñir la banda sin romper el contraste. */
   var GROUND = ['bur','crm','bur','crm','bur','crm','bur','crm','bur','crm',
-                'bur','crm','bur','crm','bur','crm','bur','crm','bur','crm',
-                'bur','bur','crm','bur','crm','bur'];
-  var REVIEW_SCENE = 24;          /* índice 0-based de la escena de reseñas */
+                'bur','bur','crm','bur','crm','bur','crm','bur','crm','bur',
+                'crm','bur','crm','bur','crm','bur','crm','bur'];
+  var REVIEW_SCENE = 26;          /* índice 0-based de la escena de reseñas */
   var STORE_KEY = 'rtmy-tv-pos';  /* posición de reproducción */
 
   var P = new URLSearchParams(location.search);

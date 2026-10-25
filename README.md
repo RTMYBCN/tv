@@ -1,7 +1,7 @@
 # TV del local — Rice to Meet You
 
-Bucle de 26 escenas para la pantalla del local. 1920×1080, se escala solo a
-la pantalla que tenga la TV y gira en bucle infinito (~4:06 a velocidad 1).
+Bucle de 28 escenas para la pantalla del local. 1920×1080, se escala solo a
+la pantalla que tenga la TV y gira en bucle infinito (~4:24 a velocidad 1).
 
 Todo está en `index.html`: CSS y JS incrustados, sin dependencias ni build.
 Lo único que carga de fuera son las tipografías (Anton, Poppins y Space Mono,
@@ -20,7 +20,7 @@ guarda la posición en `localStorage`.
 
 | Parámetro | Qué hace | Por defecto |
 |---|---|---|
-| `?speed=1.35` | Velocidad global, de 0,4 a 3. A 1,35 el bucle dura ~3:02 | `1` |
+| `?speed=1.35` | Velocidad global, de 0,4 a 3. A 1,35 el bucle dura ~3:16 | `1` |
 | `?band=0` | Oculta la banda inferior | banda visible |
 | `?reviews=500` | Cifra del conteo de reseñas de Google | `500` |
 
