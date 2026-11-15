@@ -10,10 +10,10 @@
 <style>
 /* ═══════════════════════════════════════════════════════════
    Rice to Meet You — bucle para la TV del local · versión 2
-   28 escenas, ~5:06 a velocidad 1. 1920×1080, escalado a pantalla.
+   28 escenas, ~7:08 a velocidad 1. 1920×1080, escalado a pantalla.
 
    Parámetros por URL:
-     ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~3:47)
+     ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~5:17)
      ?band=0       oculta la banda inferior
      ?reviews=512  fija la cifra de reseñas a mano (si no, sale de reviews.json)
      ?video=0      desactiva los vídeos de fondo (queda el burdeos sólido)
@@ -65,7 +65,7 @@
   --xfade: 1200ms;
   --base: 600ms;
   /* Separación entre beats: multiplica el --d de cada elemento. */
-  --stg: 1.6;
+  --stg: 1.9;
 }
 
 /* ── ESCALADO A PANTALLA ── */
@@ -140,7 +140,7 @@ html, body {
   object-fit: cover; display: block;
 }
 .sc.on .bgv {
-  animation: kenBurns calc(18000ms * var(--spd, 1)) linear both;
+  animation: kenBurns calc(24000ms * var(--spd, 1)) linear both;
 }
 @keyframes kenBurns { from { transform: scale(1.08); } to { transform: scale(1); } }
 .veil {
@@ -152,10 +152,10 @@ html, body {
   transition: opacity calc(2200ms * var(--spd, 1)) var(--ease-in-out)
               calc(200ms * var(--spd, 1));
 }
-/* En las escenas con vídeo el texto espera un poco más: primero se ve
-   el vídeo, luego entra el texto. Y como el velo es más ligero, el
+/* En las escenas con vídeo el texto espera 3,4 s: primero se ve el
+   vídeo solo, luego entran los rótulos. Y como el velo es más ligero, el
    blanco secundario sube del 65 % al 80 % para que siga leyéndose. */
-.sc[data-video] { --base: 1300ms; }
+.sc[data-video] { --base: 3400ms; }
 .sc.vok .dim, .sc.vok .accent { color: rgba(255, 255, 255, 0.8); }
 
 /* ── MOTIVO DE MARCA: el aro de la sartén del logo ──
@@ -168,12 +168,12 @@ html, body {
 .bur .ring { border-color: var(--rtmy-burdeos-700); }
 .crm .ring { border-color: var(--rtmy-cream-200); }
 .sc.on .ring {
-  animation: ringLife calc(18000ms * var(--spd, 1)) linear
+  animation: ringLife calc(24000ms * var(--spd, 1)) linear
              calc(200ms * var(--spd, 1)) both;
 }
 @keyframes ringLife {
   0%   { opacity: 0; transform: scale(0.9);  animation-timing-function: var(--ease-out); }
-  12%  { opacity: 1; transform: scale(1);    animation-timing-function: linear; }
+  9%   { opacity: 1; transform: scale(1);    animation-timing-function: linear; }
   100% { opacity: 1; transform: scale(1.07); }
 }
 .ring-a { width: 820px;  height: 820px;  right: -230px; top: -210px; }
@@ -187,25 +187,25 @@ html, body {
 .w { display: block; opacity: 0; }
 .sc.on .w {
   animation-name: fadeUp;
-  animation-duration: calc(1050ms * var(--spd, 1));
+  animation-duration: calc(1300ms * var(--spd, 1));
   animation-timing-function: var(--ease-out);
   animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
   animation-fill-mode: both;
 }
 .sc.on .w.a-fade   { animation-name: fadeIn;  animation-timing-function: var(--ease-in-out); }
-.sc.on .w.a-driftL { animation-name: driftL;  animation-duration: calc(1200ms * var(--spd, 1)); }
-.sc.on .w.a-scale  { animation-name: scaleIn; animation-duration: calc(1300ms * var(--spd, 1)); }
-.sc.on .w.a-body   { animation-name: bodyUp;  animation-duration: calc(1150ms * var(--spd, 1)); }
+.sc.on .w.a-driftL { animation-name: driftL;  animation-duration: calc(1500ms * var(--spd, 1)); }
+.sc.on .w.a-scale  { animation-name: scaleIn; animation-duration: calc(1600ms * var(--spd, 1)); }
+.sc.on .w.a-body   { animation-name: bodyUp;  animation-duration: calc(1450ms * var(--spd, 1)); }
 /* Antetítulo: entra desde su lado, corto. En las escenas centradas
    sube, porque no tiene lado. */
-.sc.on .w.a-eyebrow      { animation-name: eyebrowIn;  animation-duration: calc(1150ms * var(--spd, 1)); }
+.sc.on .w.a-eyebrow      { animation-name: eyebrowIn;  animation-duration: calc(1450ms * var(--spd, 1)); }
 .sc.on.ctr .w.a-eyebrow  { animation-name: bodyUp; }
 
 /* Enumeraciones: entran término a término. */
 .wi { display: inline-block; opacity: 0; }
 .sc.on .wi {
   animation-name: bodyUp;
-  animation-duration: calc(1050ms * var(--spd, 1));
+  animation-duration: calc(1300ms * var(--spd, 1));
   animation-timing-function: var(--ease-out);
   animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
   animation-fill-mode: both;
@@ -233,13 +233,13 @@ html, body {
 .a-lock-dn > .ln { transform: translateY(-135%); }
 .sc.on .ln {
   animation-name: lineRise;
-  animation-duration: calc(1400ms * var(--spd, 1));
+  animation-duration: calc(1750ms * var(--spd, 1));
   animation-timing-function: var(--ease-out);
   animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
   animation-fill-mode: both;
 }
-.sc.on .a-lock > .ln    { animation-name: lockRise; animation-duration: calc(1500ms * var(--spd, 1)); }
-.sc.on .a-lock-dn > .ln { animation-name: lockDrop; animation-duration: calc(1500ms * var(--spd, 1)); }
+.sc.on .a-lock > .ln    { animation-name: lockRise; animation-duration: calc(1900ms * var(--spd, 1)); }
+.sc.on .a-lock-dn > .ln { animation-name: lockDrop; animation-duration: calc(1900ms * var(--spd, 1)); }
 @keyframes lineRise { from { transform: translateY(135%); }              to { transform: translateY(0); } }
 @keyframes lockRise { from { transform: translateY(135%) scale(0.96); }  to { transform: translateY(0) scale(1); } }
 @keyframes lockDrop { from { transform: translateY(-135%) scale(0.96); } to { transform: translateY(0) scale(1); } }
@@ -250,7 +250,7 @@ html, body {
 .ctr .rule { transform-origin: center; }
 .bur .rule { background: var(--rtmy-white-veil-35); }
 .crm .rule { background: var(--rtmy-burdeos-800); }
-.sc.on .w.rule { animation-name: ruleIn; animation-duration: calc(1200ms * var(--spd, 1)); }
+.sc.on .w.rule { animation-name: ruleIn; animation-duration: calc(1500ms * var(--spd, 1)); }
 @keyframes ruleIn { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
 
 /* ── TIPOGRAFÍA ── */
@@ -310,7 +310,7 @@ html, body {
 }
 .scroll-track { display: flex; flex-direction: column; }
 .scroll-track .li { height: 86px; align-items: center; }
-.sc.on .scroll-track { animation: listScroll calc(13000ms * var(--spd, 1)) linear infinite; }
+.sc.on .scroll-track { animation: listScroll calc(15000ms * var(--spd, 1)) linear infinite; }
 @keyframes listScroll { from { transform: translateY(0); } to { transform: translateY(-602px); } }
 
 /* ── ILUSTRACIONES DE INGREDIENTE ──
@@ -322,7 +322,7 @@ html, body {
 .ing { position: absolute; opacity: 0; pointer-events: none; }
 .sc.on .ing {
   animation-name: ingLife;
-  animation-duration: calc(18000ms * var(--spd, 1));
+  animation-duration: calc(24000ms * var(--spd, 1));
   animation-timing-function: linear;
   animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
   animation-fill-mode: both;
@@ -330,7 +330,7 @@ html, body {
 @keyframes ingLife {
   0%   { opacity: 0;    transform: translate(var(--ix, 0px), var(--iy, 0px)) scale(0.92);
          animation-timing-function: var(--ease-out); }
-  10%  { opacity: 0.95; transform: translate(0px, 0px) scale(1);
+  8%   { opacity: 0.95; transform: translate(0px, 0px) scale(1);
          animation-timing-function: linear; }
   100% { opacity: 0.95; transform: translate(calc(var(--ix, 0px) * -0.35), calc(var(--iy, 0px) * -0.35)) scale(1.04); }
 }
@@ -754,10 +754,10 @@ html, body {
   'use strict';
 
   /* Duraciones en segundos, una por escena, en el orden del DOM.
-     ~5:06 en total a velocidad 1 (1,5 s más por escena que en la
-     versión 1). Cada duración incluye la despedida de la escena. */
-  var DUR = [9, 11.5, 12.5, 12, 11, 10, 10.5, 11.5, 11, 12, 10.5, 11.5, 10.5, 11,
-             10.5, 11, 11, 10.5, 11, 11, 10.5, 10, 10.5, 10, 11, 11.5, 11.5, 11.5];
+     ~7:08 en total a velocidad 1. Cada duración incluye la despedida
+     de la escena. */
+  var DUR = [12.6, 16.1, 17.5, 16.8, 15.4, 14, 14.7, 16.1, 15.4, 16.8, 14.7, 16.1, 14.7, 15.4,
+             14.7, 15.4, 15.4, 14.7, 15.4, 15.4, 14.7, 14, 14.7, 14, 15.4, 16.1, 16.1, 16.1];
   /* Fondo de cada escena, para teñir la banda sin romper el contraste. */
   var GROUND = ['bur','crm','bur','crm','bur','crm','bur','crm','bur','crm',
                 'bur','bur','crm','bur','crm','bur','crm','bur','crm','bur',
@@ -769,7 +769,7 @@ html, body {
        LEAD   lo que se adelanta la despedida del contenido al fundido;
        XFADE  lo que tarda el fundido (--xfade);
        BASE   lo que esperan los beats de la escena nueva (--base). */
-  var LEAD = 420, XFADE = 1200, BASE = 600, STG = 1.6;
+  var LEAD = 420, XFADE = 1200, BASE = 600, STG = 1.9;
 
   var P = new URLSearchParams(location.search);
   var SPEED = parseFloat(P.get('speed'));
@@ -912,7 +912,7 @@ html, body {
   /* Conteo del número de reseñas: arranca cuando la cifra ya se ve,
      frena al llegar y dura menos cuanto más rápido va el bucle. */
   function countUp() {
-    var t0 = null, dur = 3000 / SPEED;
+    var t0 = null, dur = 3400 / SPEED;
     if (raf) cancelAnimationFrame(raf);
     function step(ts) {
       if (t0 === null) t0 = ts;

@@ -1,7 +1,7 @@
 # TV del local — Rice to Meet You
 
 Bucle de 28 escenas para la pantalla del local. 1920×1080, se escala solo a
-la pantalla que tenga la TV y gira en bucle infinito (~5:06 a velocidad 1).
+la pantalla que tenga la TV y gira en bucle infinito (~7:08 a velocidad 1).
 
 Todo está en `index.html`: CSS y JS incrustados, sin dependencias ni build.
 Lo único que carga de fuera son las tipografías (Anton, Poppins y Space Mono,
@@ -12,9 +12,9 @@ desde Google Fonts) y lo que hay en `assets/`.
 El contenido es el mismo que en la versión 1: mismas 28 escenas y mismos
 textos. Cambia cómo se mueve:
 
-- **Más pausado.** Cada escena dura 1,5 s más (el bucle pasa de 4:24 a
-  5:06) y las entradas son más lentas y van más separadas, para que cada
-  movimiento se desarrolle entero.
+- **Más pausado.** Las escenas duran entre 12,6 y 17,5 s (antes entre 7,5 y
+  11 s): el bucle pasa de 4:24 a 7:08. Las entradas de texto son más lentas
+  y van más separadas, para que cada movimiento se desarrolle entero.
 
 - **Las escenas se despiden.** Antes, al cambiar de escena, el texto
   desaparecía de golpe mientras el fondo fundía. Ahora el contenido se retira
@@ -51,7 +51,7 @@ guarda la posición en `localStorage`.
 
 | Parámetro | Qué hace | Por defecto |
 |---|---|---|
-| `?speed=1.35` | Velocidad global, de 0,4 a 3. A 1,35 el bucle dura ~3:47 | `1` |
+| `?speed=1.35` | Velocidad global, de 0,4 a 3. A 1,35 el bucle dura ~5:17 | `1` |
 | `?band=0` | Oculta la banda inferior | banda visible |
 | `?reviews=512` | Fija la cifra de reseñas a mano | sale de `reviews.json` |
 | `?video=0` | Desactiva los vídeos de fondo; las escenas quedan en burdeos sólido | vídeos activos |
@@ -67,35 +67,36 @@ como estaba, con todas las demás mejoras.
 
 - `index.html` — el bucle entero.
 - `assets/` — las ilustraciones de ingrediente, el sello de marca y el QR.
-- `assets/video/` — los ocho clips de fondo (unos 40 MB en total).
+- `assets/video/` — los ocho clips de fondo (unos 54 MB en total).
 - `reviews.json` — la cifra de reseñas. **No hace falta tocarlo a mano.**
 
 ## Los vídeos de fondo
 
 Solo van en escenas burdeos. El vídeo queda debajo de un velo burdeos sólido
 al 46 %, que arranca opaco y se abre cuando el vídeo ya está reproduciéndose.
-En estas escenas el texto espera 1,3 s antes de entrar, para que primero se
-vea el vídeo, y el blanco secundario sube del 65 % al 80 % para que se siga
+En estas escenas el texto espera 3,4 s antes de entrar, para que primero se
+vea el vídeo solo, y el blanco secundario sube del 65 % al 80 % para que se siga
 leyendo sobre la imagen.
 Si un vídeo no carga o la TV no lo reproduce, el velo no se abre y la escena
 se ve en burdeos sólido, como en la versión 1.
 
 | Escena | Clip | Original | Tramo |
 |---|---|---|---|
-| 5 · Arroz Albufera | `arroz-hirviendo.mp4` | `TEAM B. RTMY/C2929.MP4` | 0,4–7,0 s |
-| 7 · Hay paella para todos | `caldo.mp4` | `RTMU JOR LEO/VID/C1295.MP4` | entero |
-| 9 · No hace falta saber cocinar | `sofrito-manos.mp4` | `RTMU JOR LEO/VID/C1290.MP4` | 0,3–6,8 s |
-| 12 · Dos horas y media | `taller-monitor.mp4` | `RTMU JOR LEO/VID/C1282.MP4` | 8,0–14,5 s |
-| 16 · Reserva (QR) | `taller-neon.mp4` | `Talleres/C3275.MP4` | 0,2–6,8 s |
-| 20 · Tres formatos | `equipo-sala.mp4` | `TEAM B. RTMY/C2937.MP4` | 10,5–17,3 s |
-| 24 · Lo mejor no es el plato | `paella-fuego.mp4` | `TEAM B. RTMY/C2933.MP4` | entero |
-| 26 · Restaurante 13–23 | `mesa-paella.mp4` | `TEAM B. RTMY/C2937.MP4` | 0–5,6 s |
+| 5 · Arroz Albufera | `arroz-hirviendo.mp4` | `TEAM B. RTMY/C2929.MP4` | 0,4–7,0 s, a 0,4× |
+| 7 · Hay paella para todos | `caldo.mp4` | `RTMU JOR LEO/VID/C1295.MP4` | entero, a 0,4×, ida y vuelta |
+| 9 · No hace falta saber cocinar | `sofrito-manos.mp4` | `RTMU JOR LEO/VID/C1290.MP4` | 0,3–8,8 s |
+| 12 · Dos horas y media | `taller-monitor.mp4` | `RTMU JOR LEO/VID/C1282.MP4` | 8,0–17,0 s |
+| 16 · Reserva (QR) | `taller-neon.mp4` | `Talleres/C3275.MP4` | 0,1–6,9 s, a 0,4× |
+| 20 · Tres formatos | `equipo-sala.mp4` | `TEAM B. RTMY/C2937.MP4` | 10,2–18,5 s |
+| 24 · Lo mejor no es el plato | `paella-fuego.mp4` | `TEAM B. RTMY/C2933.MP4` | entero, ida y vuelta |
+| 26 · Restaurante 13–23 | `mesa-paella.mp4` | `TEAM B. RTMY/C2937.MP4` | 0–8,5 s |
 
 Los originales están en el SSD (`RTMY SSD/RICE TO MEET YOU/`). Cada clip va a
-cámara lenta (los originales son a 60 fps: se pasan a mitad de velocidad, y
-`caldo.mp4` a 0,4×), en 1920×1080, H.264, sin audio, algo oscurecido y con
-las luces altas recortadas para que el texto se lea encima. Duran entre 11 y
-13,6 s. Si un clip dura menos que su escena, el script lo reproduce un poco
+cámara lenta (los originales son a 60 fps: se pasan a mitad de velocidad,
+salvo donde la tabla dice 0,4×). Los dos originales más cortos se reproducen
+hacia delante y luego hacia atrás para que duren lo que su escena. Todo va en 1920×1080, H.264, sin audio, algo oscurecido y con
+las luces altas recortadas para que el texto se lea encima. Duran entre 16,5 y
+18 s. Si un clip dura menos que su escena, el script lo reproduce un poco
 más despacio (como mínimo a 0,6×) para que no llegue a repetirse a la vista.
 
 Para **cambiar o añadir** un vídeo: la escena lleva `data-video="assets/video/…"`
