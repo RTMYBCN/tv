@@ -9,13 +9,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════
-   Rice to Meet You — bucle para la TV del local
-   28 escenas, ~4:24 a velocidad 1. 1920×1080, escalado a pantalla.
+   Rice to Meet You — bucle para la TV del local · versión 2
+   28 escenas, ~5:06 a velocidad 1. 1920×1080, escalado a pantalla.
 
    Parámetros por URL:
-     ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~3:16)
+     ?speed=1.35   velocidad global (0,4–3; 1,35 deja el bucle en ~3:47)
      ?band=0       oculta la banda inferior
      ?reviews=512  fija la cifra de reseñas a mano (si no, sale de reviews.json)
+     ?video=0      desactiva los vídeos de fondo (queda el burdeos sólido)
+
+   Qué cambia respecto a la versión 1:
+     · Cada escena se despide antes de irse: el contenido se retira y
+       solo entonces funde la siguiente, por encima y sin bajón de color.
+     · Las entradas frenan al llegar (--ease-out) en vez de arrancar lentas.
+     · Titulares y lockups suben dentro de una máscara fija moviendo solo
+       transform: ni clip-path ni letter-spacing animados.
+     · Aros e ilustraciones siguen vivos toda la escena, muy despacio.
+     · Ocho escenas burdeos llevan vídeo real del local bajo un velo
+       burdeos. Si el vídeo no carga, la escena queda como antes.
 
    Tokens, tipografía y motivos vienen del design system de RTMY.
    Burdeos #741C1C es el único color de marca. Sin negro, sin blanco
@@ -39,7 +50,22 @@
   --font-display: 'Anton', 'Poppins', system-ui, sans-serif;
   --font-body: 'Poppins', system-ui, sans-serif;
   --font-editorial: 'Space Mono', 'Poppins', monospace;
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── MOVIMIENTO ──
+     Tres curvas, cada una con su trabajo:
+       --ease-out     entradas: salen rápidas y se posan con calma.
+       --ease-in-out  lo que ya está en pantalla y cambia (fundidos, velo).
+       --ease-exit    salidas: aceleran al irse, cortas. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-exit: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-standard: var(--ease-in-out);
+  /* Lo que tarda el fundido entre escenas, y lo que esperan los beats
+     de la escena nueva para empezar: entran con el fondo ya asentado. */
+  --xfade: 1200ms;
+  --base: 600ms;
+  /* Separación entre beats: multiplica el --d de cada elemento. */
+  --stg: 1.6;
 }
 
 /* ── ESCALADO A PANTALLA ── */
@@ -66,20 +92,75 @@ html, body {
 .bur .accent { color: var(--rtmy-white-veil-65); }
 .crm .accent { color: var(--rtmy-burdeos-800); }
 
-/* ── ESCENAS ── */
+/* ── ESCENAS ──
+   Una escena apagada no se pinta (visibility: hidden). La que entra
+   funde POR ENCIMA de la que sale, que se queda opaca debajo hasta que
+   la nueva la tapa del todo: es un fundido limpio, sin el bajón hacia
+   el color de fondo que da cruzar dos capas a media opacidad. */
 .sc {
-  position: absolute; inset: 0; opacity: 0;
-  transition: opacity calc(700ms * var(--spd, 1)) var(--ease-standard);
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 0 150px 110px; box-sizing: border-box; overflow: hidden;
+  position: absolute; inset: 0; overflow: hidden;
+  opacity: 0; visibility: hidden; z-index: 0;
 }
-.sc.on { opacity: 1; }
-.sc.ctr { align-items: center; text-align: center; }
-.sc.ing-r { padding-right: 500px; }
-.sc.ing-w { padding-right: 400px; }
+.sc.on {
+  opacity: 1; visibility: visible; z-index: 2;
+  transition: opacity calc(var(--xfade) * var(--spd, 1)) var(--ease-in-out);
+}
+.sc.on.leaving { z-index: 1; }
+
+/* El contenido de la escena. El script envuelve aquí todo lo que hay
+   dentro de cada .sc, para poder despedirlo de una pieza. */
+.in {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 150px 110px; box-sizing: border-box;
+}
+.sc.ctr .in { align-items: center; text-align: center; }
+/* Escenas con ilustración en el canalón derecho: el texto no entra ahí. */
+.sc.ing-r .in { padding-right: 500px; }
+.sc.ing-w .in { padding-right: 400px; }
 .nw, .nw span { white-space: nowrap; }
 
-/* ── MOTIVO DE MARCA: el aro de la sartén del logo ── */
+/* Salida: el contenido sube un poco y se apaga, acelerando. Dura poco
+   a propósito: lo que se va no debe hacerse esperar. */
+.sc.leaving .in {
+  animation: sceneOut calc(520ms * var(--spd, 1)) var(--ease-exit) both;
+}
+@keyframes sceneOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-26px); }
+}
+
+/* ── VÍDEO DE FONDO ──
+   Solo en escenas burdeos. El vídeo va debajo de un velo burdeos
+   sólido (no es un degradado): el velo arranca opaco y se abre cuando
+   el vídeo ya está reproduciéndose. Si el vídeo falla o tarda, el velo
+   no se abre y la escena es el burdeos de siempre. */
+.bgv {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.sc.on .bgv {
+  animation: kenBurns calc(18000ms * var(--spd, 1)) linear both;
+}
+@keyframes kenBurns { from { transform: scale(1.08); } to { transform: scale(1); } }
+.veil {
+  position: absolute; inset: 0;
+  background: var(--rtmy-burdeos-800); opacity: 1;
+}
+.sc.vok.on .veil {
+  opacity: 0.46;
+  transition: opacity calc(2200ms * var(--spd, 1)) var(--ease-in-out)
+              calc(200ms * var(--spd, 1));
+}
+/* En las escenas con vídeo el texto espera un poco más: primero se ve
+   el vídeo, luego entra el texto. Y como el velo es más ligero, el
+   blanco secundario sube del 65 % al 80 % para que siga leyéndose. */
+.sc[data-video] { --base: 1300ms; }
+.sc.vok .dim, .sc.vok .accent { color: rgba(255, 255, 255, 0.8); }
+
+/* ── MOTIVO DE MARCA: el aro de la sartén del logo ──
+   Entra y sigue creciendo muy despacio toda la escena: nunca se queda
+   clavado. */
 .ring {
   position: absolute; border-radius: 50%; border-style: solid;
   border-width: 4px; opacity: 0; pointer-events: none;
@@ -87,63 +168,89 @@ html, body {
 .bur .ring { border-color: var(--rtmy-burdeos-700); }
 .crm .ring { border-color: var(--rtmy-cream-200); }
 .sc.on .ring {
-  animation: ringIn calc(1500ms * var(--spd, 1)) var(--ease-standard)
-             calc(160ms * var(--spd, 1)) both;
+  animation: ringLife calc(18000ms * var(--spd, 1)) linear
+             calc(200ms * var(--spd, 1)) both;
 }
-@keyframes ringIn {
-  from { opacity: 0; transform: scale(0.94); }
-  to   { opacity: 1; transform: scale(1); }
+@keyframes ringLife {
+  0%   { opacity: 0; transform: scale(0.9);  animation-timing-function: var(--ease-out); }
+  12%  { opacity: 1; transform: scale(1);    animation-timing-function: linear; }
+  100% { opacity: 1; transform: scale(1.07); }
 }
 .ring-a { width: 820px;  height: 820px;  right: -230px; top: -210px; }
 .ring-b { width: 1040px; height: 1040px; left: -340px;  bottom: -380px; }
 .ring-c { width: 660px;  height: 660px;  right: -150px; bottom: -230px; }
 .ring-d { width: 900px;  height: 900px;  left: -300px;  top: -320px; }
 
-/* ── BEATS: cada papel entra a su manera ── */
+/* ── BEATS: cada papel entra a su manera ──
+   Todas las entradas usan --ease-out y solo mueven transform y opacity.
+   Sin rebotes, elásticos, flashes ni giros. */
 .w { display: block; opacity: 0; }
 .sc.on .w {
   animation-name: fadeUp;
-  animation-duration: calc(600ms * var(--spd, 1));
-  animation-timing-function: var(--ease-standard);
-  animation-delay: calc(var(--d, 0ms) * var(--spd, 1) * 1.3);
+  animation-duration: calc(1050ms * var(--spd, 1));
+  animation-timing-function: var(--ease-out);
+  animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
   animation-fill-mode: both;
 }
-.sc.on .w.a-fade   { animation-name: fadeIn; }
-.sc.on .w.a-driftL { animation-name: driftL; }
-.sc.on .w.a-scale  { animation-name: scaleIn; }
-.sc.on .w.a-type   { animation-name: typeRise; animation-duration: calc(640ms * var(--spd, 1)); }
-.sc.on .w.a-eyebrow{ animation-name: trackIn;  animation-duration: calc(760ms * var(--spd, 1)); }
-.sc.on .w.a-body   { animation-name: bodyUp;   animation-duration: calc(700ms * var(--spd, 1)); }
+.sc.on .w.a-fade   { animation-name: fadeIn;  animation-timing-function: var(--ease-in-out); }
+.sc.on .w.a-driftL { animation-name: driftL;  animation-duration: calc(1200ms * var(--spd, 1)); }
+.sc.on .w.a-scale  { animation-name: scaleIn; animation-duration: calc(1300ms * var(--spd, 1)); }
+.sc.on .w.a-body   { animation-name: bodyUp;  animation-duration: calc(1150ms * var(--spd, 1)); }
+/* Antetítulo: entra desde su lado, corto. En las escenas centradas
+   sube, porque no tiene lado. */
+.sc.on .w.a-eyebrow      { animation-name: eyebrowIn;  animation-duration: calc(1150ms * var(--spd, 1)); }
+.sc.on.ctr .w.a-eyebrow  { animation-name: bodyUp; }
+
+/* Enumeraciones: entran término a término. */
 .wi { display: inline-block; opacity: 0; }
 .sc.on .wi {
   animation-name: bodyUp;
-  animation-duration: calc(620ms * var(--spd, 1));
-  animation-timing-function: var(--ease-standard);
-  animation-delay: calc(var(--d, 0ms) * var(--spd, 1) * 1.3);
+  animation-duration: calc(1050ms * var(--spd, 1));
+  animation-timing-function: var(--ease-out);
+  animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
   animation-fill-mode: both;
 }
 .inl { display: inline-block; }
 
-@keyframes fadeUp  { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
-@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-@keyframes bodyUp  { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-@keyframes driftL  { from { opacity: 0; transform: translateX(-44px); } to { opacity: 1; transform: none; } }
-@keyframes scaleIn { from { opacity: 0; transform: scale(0.92); }       to { opacity: 1; transform: scale(1); } }
-@keyframes typeRise {
-  from { opacity: 0; transform: translateY(44px); clip-path: inset(100% -8% -12% -8%); }
-  to   { opacity: 1; transform: translateY(0);    clip-path: inset(-12% -8% -12% -8%); }
-}
-@keyframes trackIn {
-  from { opacity: 0; letter-spacing: 0.36em; }
-  to   { opacity: 1; letter-spacing: 0.22em; }
-}
+@keyframes fadeUp    { from { opacity: 0; transform: translateY(30px); }  to { opacity: 1; transform: none; } }
+@keyframes fadeIn    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bodyUp    { from { opacity: 0; transform: translateY(18px); }  to { opacity: 1; transform: none; } }
+@keyframes driftL    { from { opacity: 0; transform: translateX(-56px); } to { opacity: 1; transform: none; } }
+@keyframes eyebrowIn { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes scaleIn   { from { opacity: 0; transform: scale(0.92); }       to { opacity: 1; transform: scale(1); } }
 
-/* Filete editorial bajo el antetítulo */
+/* ── TITULARES: suben dentro de su propia máscara ──
+   La máscara (.w) es fija: un clip-path que no se anima. Lo que se
+   mueve es la línea de dentro (.ln, que pone el script), y solo con
+   transform. El recorte sobra por arriba y por abajo para no comerse
+   tildes ni descendentes, y por los lados no recorta nada. */
+.w.a-type, .w.a-lock, .w.a-lock-dn {
+  opacity: 1;
+  clip-path: inset(-0.24em -2000px -0.24em -2000px);
+}
+.sc.on .w.a-type, .sc.on .w.a-lock, .sc.on .w.a-lock-dn { animation: none; }
+.ln { display: block; transform: translateY(135%); }
+.a-lock-dn > .ln { transform: translateY(-135%); }
+.sc.on .ln {
+  animation-name: lineRise;
+  animation-duration: calc(1400ms * var(--spd, 1));
+  animation-timing-function: var(--ease-out);
+  animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
+  animation-fill-mode: both;
+}
+.sc.on .a-lock > .ln    { animation-name: lockRise; animation-duration: calc(1500ms * var(--spd, 1)); }
+.sc.on .a-lock-dn > .ln { animation-name: lockDrop; animation-duration: calc(1500ms * var(--spd, 1)); }
+@keyframes lineRise { from { transform: translateY(135%); }              to { transform: translateY(0); } }
+@keyframes lockRise { from { transform: translateY(135%) scale(0.96); }  to { transform: translateY(0) scale(1); } }
+@keyframes lockDrop { from { transform: translateY(-135%) scale(0.96); } to { transform: translateY(0) scale(1); } }
+
+/* Filete editorial bajo el antetítulo: se dibuja desde su lado
+   (desde el centro en las escenas centradas). */
 .rule { width: 150px; height: 4px; margin-top: 22px; transform-origin: left center; }
 .ctr .rule { transform-origin: center; }
 .bur .rule { background: var(--rtmy-white-veil-35); }
 .crm .rule { background: var(--rtmy-burdeos-800); }
-.sc.on .w.rule { animation-name: ruleIn; animation-duration: calc(560ms * var(--spd, 1)); }
+.sc.on .w.rule { animation-name: ruleIn; animation-duration: calc(1200ms * var(--spd, 1)); }
 @keyframes ruleIn { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
 
 /* ── TIPOGRAFÍA ── */
@@ -168,14 +275,13 @@ html, body {
 .li .step { opacity: 0.55; min-width: 86px; }
 .stars { font-family: var(--font-body); font-size: 96px; letter-spacing: 20px; }
 /* Tres formatos: tono propio en escala de claridad, con marca delante */
-.fmt { display: flex; align-items: center; gap: 30px; }
+.fmt > .ln { display: flex; align-items: center; gap: 30px; }
 .fmt-bar { width: 72px; height: 12px; flex: none; border-radius: 2px; }
 
 /* ── LOCKUP DE CAMISETA: tipografía cinética ──
    Los dos estampados de la espalda, en movimiento. Las palabras se
-   montan una sobre otra, cada una entrando dentro de su propia máscara
-   y asentando el tracking. La palabra en contorno es el recurso del
-   propio estampado, no un invento. */
+   montan una sobre otra, cada una entrando dentro de su propia máscara.
+   La palabra en contorno es el recurso del propio estampado. */
 .lock { font-family: var(--font-display); line-height: 0.84; letter-spacing: 0.02em; }
 .lock-top {
   font-family: var(--font-body); font-weight: 700; font-size: 72px;
@@ -189,45 +295,44 @@ html, body {
   .bur .outline { color: var(--rtmy-white-veil-35); }
   .crm .outline { color: var(--rtmy-cream-200); }
 }
-.sc.on .w.a-lock    { animation-name: lockUp;   animation-duration: calc(640ms * var(--spd, 1)); }
-.sc.on .w.a-lock-dn { animation-name: lockDown; animation-duration: calc(640ms * var(--spd, 1)); }
-@keyframes lockUp {
-  from { opacity: 0; transform: translateY(40px) scale(0.94);  letter-spacing: 0.14em; clip-path: inset(100% -6% -14% -6%); }
-  to   { opacity: 1; transform: translateY(0) scale(1);        letter-spacing: 0.02em; clip-path: inset(-14% -6% -14% -6%); }
-}
-@keyframes lockDown {
-  from { opacity: 0; transform: translateY(-40px) scale(0.94); letter-spacing: 0.14em; clip-path: inset(-14% -6% 100% -6%); }
-  to   { opacity: 1; transform: translateY(0) scale(1);        letter-spacing: 0.02em; clip-path: inset(-14% -6% -14% -6%); }
-}
 .lock-url { font-family: var(--font-display); font-size: 72px; letter-spacing: 0.04em; }
 .lock-rule { width: 980px; height: 5px; }
 .bur .lock-rule { background: var(--rtmy-white); }
 .crm .lock-rule { background: var(--rtmy-burdeos-800); }
 
-/* ── CARRUSEL VERTICAL DE TAPAS ── */
-.scroll-win { height: 430px; overflow: hidden; margin-top: 38px; }
+/* ── CARRUSEL VERTICAL DE TAPAS ──
+   Dos filetes marcan la ventana, para que las líneas que entran y
+   salen se lean como una carta que pasa y no como un corte. */
+.scroll-win {
+  height: 430px; overflow: hidden; margin-top: 38px;
+  border-top: 2px solid var(--rtmy-white-veil-35);
+  border-bottom: 2px solid var(--rtmy-white-veil-35);
+}
 .scroll-track { display: flex; flex-direction: column; }
 .scroll-track .li { height: 86px; align-items: center; }
-.sc.on .scroll-track { animation: listScroll calc(11000ms * var(--spd, 1)) linear infinite; }
+.sc.on .scroll-track { animation: listScroll calc(13000ms * var(--spd, 1)) linear infinite; }
 @keyframes listScroll { from { transform: translateY(0); } to { transform: translateY(-602px); } }
 
 /* ── ILUSTRACIONES DE INGREDIENTE ──
-   Una por escena, entera dentro del frame, con deriva corta hacia dentro.
+   Una por escena, entera dentro del frame. Entra con una deriva corta
+   hacia dentro y luego sigue moviéndose, casi nada, hasta que la escena
+   se despide. Ya no se apaga sola a mitad de escena.
    Las de canto blanco a sangre (aceite, ajo, calamar, cebolla, azafrán)
    solo sobre crema. vitrocerámica queda fuera del bucle. */
 .ing { position: absolute; opacity: 0; pointer-events: none; }
 .sc.on .ing {
-  animation-name: ingDrift;
-  animation-duration: calc(var(--idur, 10000ms) * var(--spd, 1));
-  animation-timing-function: var(--ease-standard);
-  animation-delay: calc(var(--d, 0ms) * var(--spd, 1) * 1.3);
+  animation-name: ingLife;
+  animation-duration: calc(18000ms * var(--spd, 1));
+  animation-timing-function: linear;
+  animation-delay: calc((var(--base) + var(--d, 0ms) * var(--stg)) * var(--spd, 1));
   animation-fill-mode: both;
 }
-@keyframes ingDrift {
-  0%   { opacity: 0;    transform: translate(var(--ix, 0px), var(--iy, 0px)) scale(0.92); }
-  16%  { opacity: 0.95; transform: translate(0px, 0px) scale(1); }
-  76%  { opacity: 0.95; transform: translate(0px, 0px) scale(1); }
-  100% { opacity: 0;    transform: translate(calc(var(--ix, 0px) * -0.55), calc(var(--iy, 0px) * -0.55)) scale(1); }
+@keyframes ingLife {
+  0%   { opacity: 0;    transform: translate(var(--ix, 0px), var(--iy, 0px)) scale(0.92);
+         animation-timing-function: var(--ease-out); }
+  10%  { opacity: 0.95; transform: translate(0px, 0px) scale(1);
+         animation-timing-function: linear; }
+  100% { opacity: 0.95; transform: translate(calc(var(--ix, 0px) * -0.35), calc(var(--iy, 0px) * -0.35)) scale(1.04); }
 }
 .s-rmid { width: 320px; right: 120px; top: 380px;    --ix: 64px;  --iy: 30px; }
 .s-rsm  { width: 250px; right: 90px;  top: 400px;    --ix: 64px;  --iy: 30px; }
@@ -241,15 +346,15 @@ html, body {
 
 /* ── BANDA INFERIOR ── */
 .band {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 96px;
+  position: absolute; left: 0; right: 0; bottom: 0; height: 96px; z-index: 3;
   display: flex; align-items: center; justify-content: center; gap: 30px;
   font-family: var(--font-editorial); font-size: 34px;
   letter-spacing: 0.18em; text-transform: uppercase;
   border-top: 3px solid transparent;
-  transition: opacity calc(700ms * var(--spd, 1)) var(--ease-standard),
-              color calc(700ms * var(--spd, 1)) var(--ease-standard),
-              border-color calc(700ms * var(--spd, 1)) var(--ease-standard),
-              background-color calc(700ms * var(--spd, 1)) var(--ease-standard);
+  transition: opacity calc(var(--xfade) * var(--spd, 1)) var(--ease-in-out),
+              color calc(var(--xfade) * var(--spd, 1)) var(--ease-in-out),
+              border-color calc(var(--xfade) * var(--spd, 1)) var(--ease-in-out),
+              background-color calc(var(--xfade) * var(--spd, 1)) var(--ease-in-out);
 }
 .band .sep { opacity: 0.5; }
 .band.on-bur { background: var(--rtmy-burdeos-900); color: var(--rtmy-white-veil-65); border-top-color: var(--rtmy-burdeos-700); }
@@ -332,8 +437,8 @@ html, body {
     </div>
   </div>
 
-  <!-- 5 · Arroz Albufera -->
-  <div class="sc bur ing-r">
+  <!-- 5 · Arroz Albufera · vídeo de fondo -->
+  <div class="sc bur ing-r" data-video="assets/video/arroz-hirviendo.mp4">
     <div class="ring ring-c"></div>
     <img class="ing s-rmid" src="assets/fumet-caldo.png" alt="" style="--d: 300ms">
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Materia prima</div>
@@ -356,8 +461,8 @@ html, body {
     <div class="w a-body b-l dim" style="--d: 1480ms; margin-top: 46px">Porque los postres también dicen algo de quien cocina.</div>
   </div>
 
-  <!-- 7 · Hay paella para todos -->
-  <div class="sc bur ing-w">
+  <!-- 7 · Hay paella para todos · vídeo de fondo -->
+  <div class="sc bur ing-w" data-video="assets/video/caldo.mp4">
     <div class="ring ring-a"></div>
     <img class="ing s-rsm" src="assets/pimiento.png" alt="" style="--d: 300ms">
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Cocina · Para todos</div>
@@ -380,8 +485,8 @@ html, body {
     <div class="w a-body b dim" style="--d: 2080ms; margin-top: 14px">Con resultado garantizado.</div>
   </div>
 
-  <!-- 9 · No hace falta saber cocinar -->
-  <div class="sc bur ing-w">
+  <!-- 9 · No hace falta saber cocinar · vídeo de fondo -->
+  <div class="sc bur ing-w" data-video="assets/video/sofrito-manos.mp4">
     <div class="ring ring-d"></div>
     <img class="ing s-rsm" src="assets/salmorreta.png" alt="" style="--d: 400ms">
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Taller de paella</div>
@@ -417,8 +522,8 @@ html, body {
     <div class="w a-body lock-url" style="--d: 1420ms; margin-top: 18px">RICETOMEETYOU.FUN</div>
   </div>
 
-  <!-- 12 · Dos horas y media -->
-  <div class="sc bur ing-w">
+  <!-- 12 · Dos horas y media · vídeo de fondo -->
+  <div class="sc bur ing-w" data-video="assets/video/taller-monitor.mp4">
     <div class="ring ring-c"></div>
     <img class="ing s-rsm" src="assets/arroz.png" alt="" style="--d: 300ms">
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Taller de paella</div>
@@ -457,7 +562,7 @@ html, body {
     <div class="w a-type d-xxl accent" style="--d: 900ms">A LAS 13 H.</div>
     <div class="w a-body b-l" style="--d: 1420ms; margin-top: 40px">Taller de paella al mediodía, de miércoles a domingo.</div>
     <div class="li" style="margin-top: 18px"><span class="wi" style="--d: 1700ms">69 €</span><span class="wi bullet" style="--d: 1800ms">·</span><span class="wi" style="--d: 1900ms">2,5 h</span><span class="wi bullet" style="--d: 2000ms">·</span><span class="wi" style="--d: 2100ms">12 personas</span></div>
-    <div class="w a-body url dim" style="--d: 2020ms; margin-top: 26px">ricetomeetyou.fun</div>
+    <div class="w a-body url dim" style="--d: 2340ms; margin-top: 26px">ricetomeetyou.fun</div>
   </div>
 
   <!-- 15 · Idiomas y grupos privados -->
@@ -472,8 +577,8 @@ html, body {
     <div class="enum b-l nw" style="margin-top: 42px; font-size: 40px"><span class="wi" style="--d: 1720ms">Cumpleaños,</span> <span class="wi" style="--d: 1870ms">aniversarios,</span> <span class="wi" style="--d: 2020ms">equipos,</span> <span class="wi" style="--d: 2170ms">familias que no se ven nunca.</span></div>
   </div>
 
-  <!-- 16 · QR de reserva -->
-  <div class="sc ctr bur">
+  <!-- 16 · QR de reserva · vídeo de fondo -->
+  <div class="sc ctr bur" data-video="assets/video/taller-neon.mp4">
     <div class="ring ring-b"></div>
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Reserva</div>
     <div class="w rule" style="--d: 300ms"></div>
@@ -505,7 +610,7 @@ html, body {
     <div class="w a-type t-xl" style="--d: 560ms; margin-top: 30px">Regala</div>
     <div class="w a-type t-xl accent" style="--d: 920ms">un taller.</div>
     <div class="li" style="margin-top: 26px"><span class="wi" style="--d: 1320ms">69 €</span><span class="wi bullet" style="--d: 1420ms">·</span><span class="wi" style="--d: 1520ms">2,5 h</span><span class="wi bullet" style="--d: 1620ms">·</span><span class="wi" style="--d: 1720ms">cada uno con su paella</span></div>
-    <div class="w a-body b-l" style="--d: 1700ms; margin-top: 36px">Mejor que otra cosa que no van a usar.</div>
+    <div class="w a-body b-l" style="--d: 1960ms; margin-top: 36px">Mejor que otra cosa que no van a usar.</div>
   </div>
 
   <!-- 19 · Sala de reuniones -->
@@ -521,8 +626,8 @@ html, body {
     <div class="w a-body b-l nw" style="--d: 1820ms; margin-top: 42px">Team building con paella para grupos de 6 a 25 personas.</div>
   </div>
 
-  <!-- 20 · Tres formatos -->
-  <div class="sc bur ing-w">
+  <!-- 20 · Tres formatos · vídeo de fondo -->
+  <div class="sc bur ing-w" data-video="assets/video/equipo-sala.mp4">
     <div class="ring ring-d"></div>
     <img class="ing s-rsm" src="assets/fumet-caldo.png" alt="" style="--d: 300ms">
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Tres formatos</div>
@@ -575,8 +680,8 @@ html, body {
     <div class="w a-body lock-url accent" style="--d: 1760ms; margin-top: 18px">RICETOMEETYOU.FUN</div>
   </div>
 
-  <!-- 24 · Manifiesto — lo mejor no es el plato -->
-  <div class="sc bur ing-w">
+  <!-- 24 · Manifiesto — lo mejor no es el plato · vídeo de fondo -->
+  <div class="sc bur ing-w" data-video="assets/video/paella-fuego.mp4">
     <div class="ring ring-c"></div>
     <img class="ing s-rsm" src="assets/arroz.png" alt="" style="--d: 500ms">
     <div class="w a-body b-l dim" style="--d: 140ms">Lo mejor no es el plato.</div>
@@ -597,8 +702,8 @@ html, body {
     <div class="w a-body b-l" style="--d: 1780ms; margin-top: 44px">RTMY es el sitio donde pasan cosas entre personas.</div>
   </div>
 
-  <!-- 26 · Restaurante 13–23 -->
-  <div class="sc bur ing-r">
+  <!-- 26 · Restaurante 13–23 · vídeo de fondo -->
+  <div class="sc bur ing-r" data-video="assets/video/mesa-paella.mp4">
     <div class="ring ring-a"></div>
     <img class="ing s-rmid s-tall" src="assets/vino.png" alt="" style="--d: 300ms">
     <div class="w a-eyebrow eyebrow dim" style="--d: 80ms">Restaurante</div>
@@ -617,7 +722,7 @@ html, body {
     <div class="w a-eyebrow eyebrow accent" style="--d: 80ms">Google Reviews</div>
     <div class="w rule" style="--d: 300ms"></div>
     <div class="w a-fade d-xxl accent" style="--d: 580ms; margin-top: 26px"><span id="rev">0</span></div>
-    <div class="w a-fade stars accent" style="--d: 1600ms; margin-top: 10px" role="img" aria-label="Cinco estrellas">★★★★★</div>
+    <div class="stars accent" style="margin-top: 10px" role="img" aria-label="Cinco estrellas"><span class="wi" style="--d: 1500ms">★</span><span class="wi" style="--d: 1610ms">★</span><span class="wi" style="--d: 1720ms">★</span><span class="wi" style="--d: 1830ms">★</span><span class="wi" style="--d: 1940ms">★</span></div>
     <div class="w a-body b-l" style="--d: 1980ms; margin-top: 34px">reseñas de 5 estrellas en Google.</div>
     <div class="w a-body b dim" style="--d: 2240ms; margin-top: 14px">Lo dicen ellos, no nosotros.</div>
   </div>
@@ -649,9 +754,10 @@ html, body {
   'use strict';
 
   /* Duraciones en segundos, una por escena, en el orden del DOM.
-     ~4:24 en total a velocidad 1. */
-  var DUR = [7.5, 10, 11, 10.5, 9.5, 8.5, 9, 10, 9.5, 10.5, 9, 10, 9, 9.5,
-             9, 9.5, 9.5, 9, 9.5, 9.5, 9, 8.5, 9, 8.5, 9.5, 10, 10, 10];
+     ~5:06 en total a velocidad 1 (1,5 s más por escena que en la
+     versión 1). Cada duración incluye la despedida de la escena. */
+  var DUR = [9, 11.5, 12.5, 12, 11, 10, 10.5, 11.5, 11, 12, 10.5, 11.5, 10.5, 11,
+             10.5, 11, 11, 10.5, 11, 11, 10.5, 10, 10.5, 10, 11, 11.5, 11.5, 11.5];
   /* Fondo de cada escena, para teñir la banda sin romper el contraste. */
   var GROUND = ['bur','crm','bur','crm','bur','crm','bur','crm','bur','crm',
                 'bur','bur','crm','bur','crm','bur','crm','bur','crm','bur',
@@ -659,11 +765,18 @@ html, body {
   var REVIEW_SCENE = 26;          /* índice 0-based de la escena de reseñas */
   var STORE_KEY = 'rtmy-tv-pos';  /* posición de reproducción */
 
+  /* Tiempos de la transición, en ms a velocidad 1. Van a juego con el CSS:
+       LEAD   lo que se adelanta la despedida del contenido al fundido;
+       XFADE  lo que tarda el fundido (--xfade);
+       BASE   lo que esperan los beats de la escena nueva (--base). */
+  var LEAD = 420, XFADE = 1200, BASE = 600, STG = 1.6;
+
   var P = new URLSearchParams(location.search);
   var SPEED = parseFloat(P.get('speed'));
   if (!isFinite(SPEED) || SPEED <= 0) SPEED = 1;
   SPEED = Math.min(3, Math.max(0.4, SPEED));
   var SHOW_BAND = P.get('band') !== '0';
+  var USE_VIDEO = P.get('video') !== '0';
   /* Cifra de reseñas. Por orden de prioridad:
        1. ?reviews= en la URL, si la pones a mano;
        2. reviews.json, que actualiza sola la acción nocturna del repo;
@@ -688,9 +801,86 @@ html, body {
   var band  = document.getElementById('band');
   var revEl = document.getElementById('rev');
   var scenes = Array.prototype.slice.call(stage.querySelectorAll('.sc'));
+  var N = scenes.length;
 
   stage.style.setProperty('--spd', String(1 / SPEED));
   if (!SHOW_BAND) band.classList.add('is-off');
+
+  /* ── Preparar el DOM ──
+     El HTML de cada escena se escribe plano, como en la versión 1. Aquí
+     se le añade lo que necesita el movimiento:
+       1. todo el contenido va dentro de un .in, para despedirlo de una pieza;
+       2. los titulares (.a-type, .a-lock, .a-lock-dn) reciben una línea
+          interior .ln, que es la que sube dentro de la máscara;
+       3. las escenas con data-video reciben el <video> y su velo. */
+  var vids = [];
+  scenes.forEach(function (sc, k) {
+    var inner = document.createElement('div');
+    inner.className = 'in';
+    while (sc.firstChild) inner.appendChild(sc.firstChild);
+    sc.appendChild(inner);
+
+    Array.prototype.forEach.call(
+      inner.querySelectorAll('.w.a-type, .w.a-lock, .w.a-lock-dn'),
+      function (el) {
+        var ln = document.createElement('span');
+        ln.className = 'ln';
+        while (el.firstChild) ln.appendChild(el.firstChild);
+        el.appendChild(ln);
+      });
+
+    var src = sc.getAttribute('data-video');
+    vids[k] = null;
+    if (src && USE_VIDEO) {
+      var v = document.createElement('video');
+      v.className = 'bgv';
+      v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true;
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+      v.setAttribute('aria-hidden', 'true');
+      v.preload = 'none';
+      /* El velo solo se abre cuando el vídeo está reproduciéndose de
+         verdad. Si falla, la escena se queda en burdeos sólido. */
+      v.addEventListener('playing', function () { sc.classList.add('vok'); });
+      v.addEventListener('error', function () { sc.classList.remove('vok'); });
+      /* Si el clip dura menos que su escena, se reproduce un poco más
+         despacio para que no llegue a repetirse a la vista. */
+      v.addEventListener('loadedmetadata', function () {
+        var need = (DUR[k] * 1000 + XFADE + 300) / 1000 / SPEED;
+        if (isFinite(v.duration) && v.duration > 0) {
+          v.playbackRate = Math.max(0.6, Math.min(1, v.duration / need));
+        }
+      });
+      v.src = src;
+      var veil = document.createElement('div');
+      veil.className = 'veil';
+      sc.insertBefore(veil, inner);
+      sc.insertBefore(v, veil);
+      vids[k] = v;
+    }
+  });
+
+  /* Empieza a descargar el vídeo de una escena antes de que le toque. */
+  function prep(k) {
+    var v = vids[k];
+    if (!v || v._prep) return;
+    v._prep = true;
+    v.preload = 'auto';
+    try { v.load(); } catch (e) {}
+  }
+  function playVideo(k) {
+    var v = vids[k];
+    if (!v) return;
+    prep(k);
+    try { v.currentTime = 0; } catch (e) {}
+    var p = v.play();
+    if (p && p.catch) p.catch(function () { /* sin autoplay: burdeos sólido */ });
+  }
+  function stopVideo(k) {
+    var v = vids[k];
+    if (!v) return;
+    try { v.pause(); } catch (e) {}
+    scenes[k].classList.remove('vok');
+  }
 
   /* Escalar 1920×1080 a lo que dé la pantalla, sin deformar. */
   function fit() {
@@ -708,49 +898,84 @@ html, body {
     var raw = window.localStorage.getItem(STORE_KEY);
     if (raw !== null) {
       var n = parseInt(raw, 10);
-      if (!isNaN(n) && n >= 0 && n < scenes.length) i = n;
+      if (!isNaN(n) && n >= 0 && n < N) i = n;
     }
   } catch (e) { /* sin almacenamiento: empieza por el principio */ }
+  /* Para revisar: ?scene=16 arranca en esa escena (1–28) y ?hold=1 se
+     queda en ella sin avanzar. */
+  var FROM = parseInt(P.get('scene'), 10);
+  if (isFinite(FROM) && FROM >= 1 && FROM <= N) i = FROM - 1;
+  var HOLD = P.get('hold') === '1';
 
-  var raf = null;
+  var raf = null, revTimer = null;
 
-  /* Conteo suave del número de reseñas: ease-out, sin rebote. */
+  /* Conteo del número de reseñas: arranca cuando la cifra ya se ve,
+     frena al llegar y dura menos cuanto más rápido va el bucle. */
   function countUp() {
-    var t0 = null, dur = 2600 * SPEED;
+    var t0 = null, dur = 3000 / SPEED;
     if (raf) cancelAnimationFrame(raf);
     function step(ts) {
       if (t0 === null) t0 = ts;
       var p = Math.min(1, (ts - t0) / dur);
-      revEl.textContent = String(Math.round(REVIEWS * (1 - Math.pow(1 - p, 3))));
+      revEl.textContent = String(Math.round(REVIEWS * (1 - Math.pow(1 - p, 4))));
       if (p < 1) raf = requestAnimationFrame(step);
     }
     raf = requestAnimationFrame(step);
   }
 
-  function show(k) {
-    for (var j = 0; j < scenes.length; j++) scenes[j].classList.remove('on');
-    scenes[k].classList.add('on');
+  /* Enciende la escena k por encima de la que hubiera. */
+  function go(k, prev) {
+    var sc = scenes[k];
+    sc.classList.remove('leaving');
+    void sc.offsetWidth;            /* fija el estado apagado antes del fundido */
+    sc.classList.add('on');
+    playVideo(k);
+    prep((k + 1) % N);
+
     band.classList.remove('on-bur', 'on-crm');
     band.classList.add(GROUND[k] === 'bur' ? 'on-bur' : 'on-crm');
-    if (k === REVIEW_SCENE) countUp();
-    else revEl.textContent = '0';
+
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    if (revTimer) { clearTimeout(revTimer); revTimer = null; }
+    revEl.textContent = '0';
+    if (k === REVIEW_SCENE) {
+      /* 580 ms es el --d de la cifra en su escena; STG el factor del CSS. */
+      revTimer = setTimeout(countUp, (BASE + 580 * STG + 200) / SPEED);
+    }
+
+    /* La escena anterior se apaga cuando la nueva ya la tapa entera. */
+    if (prev !== null && prev !== k) {
+      setTimeout(function () {
+        scenes[prev].classList.remove('on', 'leaving');
+        stopVideo(prev);
+      }, (XFADE + 80) / SPEED);
+    }
+
+    if (!HOLD) {
+      setTimeout(function () { leave(k); },
+                 Math.max(1000, DUR[k] * 1000 - LEAD) / SPEED);
+    }
   }
 
-  function tick() {
-    show(i);
+  /* Despide el contenido de la escena k y, un momento después, da paso
+     a la siguiente. */
+  function leave(k) {
+    scenes[k].classList.add('leaving');
     setTimeout(function () {
-      i = (i + 1) % scenes.length;
+      i = (k + 1) % N;
       try { window.localStorage.setItem(STORE_KEY, String(i)); } catch (e) {}
-      tick();
-    }, DUR[i] * 1000 / SPEED);
+      go(i, k);
+    }, LEAD / SPEED);
   }
+
+  function start() { go(i, null); }
 
   /* Arrancar con las fuentes ya cargadas, para que el primer titular
      no entre con la métrica equivocada. */
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(tick, tick);
+    document.fonts.ready.then(start, start);
   } else {
-    window.addEventListener('load', tick);
+    window.addEventListener('load', start);
   }
 })();
 </script>
